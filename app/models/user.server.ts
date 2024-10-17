@@ -21,9 +21,18 @@ export async function createUser(email: string, password: string, phoneNumber: s
 }
 
 export async function getUserByEmail(email: string) {
-  return prisma.user.findUnique({ where: { email } });
+  return prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      password: true,
+      role: true,
+      status: true, // Include status field here
+    },
+  });
 }
-
+  
 export async function getUsersByRole(role: string) {
   return prisma.user.findMany({ where: { role } });
 }

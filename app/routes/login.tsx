@@ -7,7 +7,7 @@ import { json, redirect } from "@remix-run/node";
 import { Form, Link, useActionData, useSearchParams } from "@remix-run/react";
 import { useEffect, useRef } from "react";
 
-import { verifyLogin } from "~/models/user.server";
+import { verifyLogin, getUserByEmail } from "~/models/user.server";
 import { createUserSession, getUserId } from "~/session.server";
 import { safeRedirect, validateEmail } from "~/utils";
 
@@ -50,16 +50,33 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  // Verify user credentials
-  const user = await verifyLogin(email, password);
+// Fetch the user by email
+const user = await getUserByEmail(email);
 
-  // Return error if credentials are incorrect
-  if (!user) {
-    return json(
-      { errors: { general: "Invalid email or password", email: null, password: null } },
-      { status: 400 }
-    );
-  }
+if (!user) {
+  return json(
+    { errors: { email: "Invalid email or password", password: null } },
+    { status: 400 }
+  );
+}
+
+// Check if user is approved
+if (user.status !== "approved") {
+  return json(
+    { errors: { email: "Your account is still pending approval.", password: null } },
+    { status: 400 }
+  );
+}
+
+// Verify user credentials
+const isValidPassword = await verifyLogin(email, password);
+
+if (!isValidPassword) {
+  return json(
+    { errors: { email: "Invalid email or password", password: null } },
+    { status: 400 }
+  );
+}
 
   // Redirect based on user role (e.g., manager or employee)
   const redirectPath = user.role === "manager" ? "/admin-dashboard" : "/employee-dashboard";

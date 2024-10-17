@@ -83,6 +83,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   const user = await createUser(email, password, phoneNumber, consentToText);
 
+  // Instead of creating a user session, redirect to a page informing user that admin approval is needed
+  return redirect("/account-pending-approval");
+
   return createUserSession({
     redirectTo,
     remember: false,
