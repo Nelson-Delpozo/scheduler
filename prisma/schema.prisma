@@ -19,6 +19,8 @@ model User {
   consentToText Boolean   @default(false) // Indicates if the user consents to receive text messages
   shifts        Shift[]   @relation("UserShifts") // Relation to shifts assigned to the user
   schedules     Schedule[] @relation("UserSchedules") // Relation to schedules created by the user
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 
