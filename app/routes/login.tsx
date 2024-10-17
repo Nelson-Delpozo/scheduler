@@ -11,12 +11,14 @@ import { verifyLogin } from "~/models/user.server";
 import { createUserSession, getUserId } from "~/session.server";
 import { safeRedirect, validateEmail } from "~/utils";
 
+// Loader function to redirect users who are already logged in
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userId = await getUserId(request);
-  if (userId) return redirect("/");
+  if (userId) return redirect("/"); // If user is logged in, redirect to home page
   return json({});
 };
 
+// Action function to handle form submission for login
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const email = formData.get("email");
@@ -24,46 +26,56 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const redirectTo = safeRedirect(formData.get("redirectTo"), "/");
   const remember = formData.get("remember");
 
+  // Validate email format
   if (!validateEmail(email)) {
     return json(
       { errors: { email: "Email is invalid", password: null } },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
+  // Ensure password is provided
   if (typeof password !== "string" || password.length === 0) {
     return json(
       { errors: { email: null, password: "Password is required" } },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
+  // Check password length
   if (password.length < 8) {
     return json(
       { errors: { email: null, password: "Password is too short" } },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
+  // Verify user credentials
   const user = await verifyLogin(email, password);
 
+  // Return error if credentials are incorrect
   if (!user) {
     return json(
-      { errors: { email: "Invalid email or password", password: null } },
-      { status: 400 },
+      { errors: { general: "Invalid email or password", email: null, password: null } },
+      { status: 400 }
     );
   }
 
+  // Redirect based on user role (e.g., manager or employee)
+  const redirectPath = user.role === "manager" ? "/admin-dashboard" : "/employee-dashboard";
+
   return createUserSession({
-    redirectTo,
+    redirectTo: redirectPath,
     remember: remember === "on" ? true : false,
     request,
     userId: user.id,
   });
 };
 
+// Meta information for the login page
 export const meta: MetaFunction = () => [{ title: "Login" }];
 
+// React component for the login page
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/notes";
@@ -71,6 +83,7 @@ export default function LoginPage() {
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
+  // Focus on email or password field if there is an error
   useEffect(() => {
     if (actionData?.errors?.email) {
       emailRef.current?.focus();
@@ -82,6 +95,10 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-full flex-col justify-center">
       <div className="mx-auto w-full max-w-md px-8">
+        {/* Display general error message if login fails */}
+        {actionData?.errors?.general ? <div className="mb-4 rounded bg-red-100 p-4 text-red-700">
+            {actionData.errors.general}
+          </div> : null}
         <Form method="post" className="space-y-6">
           <div>
             <label

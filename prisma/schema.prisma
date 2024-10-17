@@ -1,38 +1,40 @@
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
+// schema.prisma
 
 generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "postgresql"  // Make sure this matches your database type
+  url      = env("DATABASE_URL")
+}
+
 model User {
-  id    String @id @default(cuid())
-  email String @unique
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  password Password?
-  notes    Note[]
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  role      String    // e.g., "manager" or "employee"
+  shifts    Shift[]   @relation("UserShifts")
+  schedules Schedule[] @relation("UserSchedules")
 }
 
-model Password {
-  hash String
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId String @unique
+model Shift {
+  id          Int      @id @default(autoincrement())
+  date        DateTime
+  startTime   DateTime
+  endTime     DateTime
+  assignedTo  User?    @relation("UserShifts", fields: [assignedToId], references: [id])
+  assignedToId Int?
+  schedule    Schedule? @relation(fields: [scheduleId], references: [id])
+  scheduleId  Int?
 }
 
-model Note {
-  id    String @id @default(cuid())
-  title String
-  body  String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId String
+model Schedule {
+  id        Int      @id @default(autoincrement())
+  name      String   // e.g., "Week of Oct 15th"
+  startDate DateTime
+  endDate   DateTime
+  shifts    Shift[]  @relation
+  createdBy User     @relation("UserSchedules", fields: [createdById], references: [id])
+  createdById Int
 }
