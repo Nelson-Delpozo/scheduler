@@ -10,13 +10,17 @@ datasource db {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  email     String    @unique
-  password  String
-  role      String    // e.g., "manager" or "employee"
-  shifts    Shift[]   @relation("UserShifts")
-  schedules Schedule[] @relation("UserSchedules")
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  password      String
+  role          String    // "employee", "manager"
+  status        String    @default("pending") // "pending", "approved"
+  phoneNumber   String    @default("")
+  consentToText Boolean   @default(false) // Indicates if the user consents to receive text messages
+  shifts        Shift[]   @relation("UserShifts") // Relation to shifts assigned to the user
+  schedules     Schedule[] @relation("UserSchedules") // Relation to schedules created by the user
 }
+
 
 model Shift {
   id          Int      @id @default(autoincrement())

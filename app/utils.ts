@@ -74,3 +74,9 @@ export function useUser(): User {
 export function validateEmail(email: unknown): email is string {
   return typeof email === "string" && email.length > 3 && email.includes("@");
 }
+
+export function validatePhoneNumber(phoneNumber: string): boolean {
+  // A basic phone number validation (supports only digits and some common phone number formats)
+  const phoneNumberRegex = /^[+]?[0-9]{10,15}$/; // Accepts international numbers with "+" and between 10-15 digits
+  return phoneNumberRegex.test(phoneNumber);
+}
