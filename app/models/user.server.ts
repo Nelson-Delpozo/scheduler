@@ -44,6 +44,33 @@ export async function getUserById(userId: number) {
   });
 }
 
+// Function to get users pending approval
+export async function getUsersPendingApproval() {
+  return prisma.user.findMany({
+    where: {
+      status: "pending",
+    },
+    select: {
+      id: true,
+      email: true,
+      phoneNumber: true,
+    },
+  });
+}
+
+// Function to approve a user
+export async function approveUser(userId: number) {
+  return prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      status: "approved",
+    },
+  });
+}
+
+
 // Function to verify a user's login credentials
 export async function verifyLogin(email: string, password: string) {
   const user = await prisma.user.findUnique({
