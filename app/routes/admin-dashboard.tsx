@@ -64,13 +64,15 @@ export default function AdminDashboard() {
         </div>
         <Outlet />
         <div className="mt-8">
-          {pendingUsers.length > 0 ? <div>
+          {pendingUsers.length > 0 ? (
+            <div>
               <h2 className="text-xl mb-4">Pending User Approvals</h2>
               <ul className="space-y-4">
                 {pendingUsers.map((user) => (
                   <li key={user.id} className="flex justify-between items-center p-4 border rounded-md">
                     <div>
-                      <p className="font-semibold">{user.email}</p>
+                      <p className="font-semibold">{user.name || "Name not provided"}</p>
+                      <p className="text-gray-600">{user.email}</p>
                       <p className="text-gray-600">{user.phoneNumber || "No phone number provided"}</p>
                     </div>
                     <form method="post">
@@ -85,8 +87,11 @@ export default function AdminDashboard() {
                   </li>
                 ))}
               </ul>
-            </div> : null}
-          {pendingUsers.length === 0 ? <p className="text-gray-700">No users are currently pending approval.</p> : null}
+            </div>
+          ) : null}
+          {pendingUsers.length === 0 ? (
+            <p className="text-gray-700">No users are currently pending approval.</p>
+          ) : null}
         </div>
         <Link to="/" className="text-blue-500 underline hover:text-blue-700 mt-8 block">
           Go back to the home page

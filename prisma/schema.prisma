@@ -1,5 +1,3 @@
-// schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -15,14 +13,29 @@ model User {
   password      String
   role          String    // "employee", "manager"
   status        String    @default("pending") // "pending", "approved"
+  name          String    @default("")
   phoneNumber   String    @default("none") @unique
   consentToText Boolean   @default(false) // Indicates if the user consents to receive text messages
+  restaurant    Restaurant?  @relation(fields: [restaurantId], references: [id])
+  restaurantId  Int?
   shifts        Shift[]   @relation("UserShifts") // Relation to shifts assigned to the user
   schedules     Schedule[] @relation("UserSchedules") // Relation to schedules created by the user
+  createdShifts Shift[]   @relation("CreatedByUser") // Relation to shifts created by the user
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
 
+model Restaurant {
+  id          Int      @id @default(autoincrement())
+  name        String
+  location    String?
+  phoneNumber String?
+  users       User[]
+  schedules   Schedule[]
+  shifts      Shift[] // Back relation to shifts
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
 
 model Shift {
   id          Int      @id @default(autoincrement())
@@ -33,6 +46,12 @@ model Shift {
   assignedToId Int?
   schedule    Schedule? @relation(fields: [scheduleId], references: [id])
   scheduleId  Int?
+  restaurant  Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId Int
+  createdBy   User     @relation("CreatedByUser", fields: [createdById], references: [id])
+  createdById Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model Schedule {
@@ -40,7 +59,11 @@ model Schedule {
   name      String   // e.g., "Week of Oct 15th"
   startDate DateTime
   endDate   DateTime
-  shifts    Shift[]  @relation
+  shifts    Shift[]
   createdBy User     @relation("UserSchedules", fields: [createdById], references: [id])
   createdById Int
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }

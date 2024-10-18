@@ -8,7 +8,7 @@ import { getUserId } from "~/session.server";
 import { getUserById } from "../models/user.server";
 
 // Loader function to handle redirection for logged-out users
-export let loader: LoaderFunction = async ({ request }) => {
+export const loader: LoaderFunction = async ({ request }) => {
   const userId = await getUserId(request);
   if (!userId) {
     // Redirect to login if the user is not authenticated

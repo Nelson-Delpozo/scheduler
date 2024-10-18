@@ -5,11 +5,12 @@ import { prisma } from "~/prisma.server";
 
 
 // Function to create a new user
-export async function createUser(email: string, password: string, phoneNumber: string | null, consentToText: boolean) {
+export async function createUser(name: string, email: string, password: string, phoneNumber: string | null, consentToText: boolean) {
   const passwordHash = await bcrypt.hash(password, 10);
 
   return prisma.user.create({
     data: {
+      name,
       email,
       password: passwordHash,
       phoneNumber, // Add phoneNumber field
@@ -28,6 +29,7 @@ export async function getUserByEmail(email: string) {
       email: true,
       password: true,
       role: true,
+      name: true, // Added name field
       status: true, // Include status field here
     },
   });
@@ -54,6 +56,7 @@ export async function getUsersPendingApproval() {
       id: true,
       email: true,
       phoneNumber: true,
+      name: true, // Added name field
     },
   });
 }
