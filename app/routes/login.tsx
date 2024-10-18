@@ -79,7 +79,14 @@ if (!isValidPassword) {
 }
 
   // Redirect based on user role (e.g., manager or employee)
-  const redirectPath = user.role === "manager" ? "/admin-dashboard" : "/employee-dashboard";
+  // const redirectPath = user.role === "manager" ? "/admin-dashboard" : "/employee-dashboard";
+    // Redirect based on user role
+    let redirectPath = "/employee-dashboard";
+    if (user.role === "admin") {
+      redirectPath = "/admin-dashboard";
+    } else if (user.role === "super-admin") {
+      redirectPath = "/super-admin-dashboard";
+    }
 
   return createUserSession({
     redirectTo: redirectPath,
