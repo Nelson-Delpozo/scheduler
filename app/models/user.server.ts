@@ -3,9 +3,15 @@ import bcrypt from "bcryptjs";
 
 import { prisma } from "~/prisma.server";
 
-
 // Function to create a new user
-export async function createUser(name: string, email: string, password: string, phoneNumber: string | null, consentToText: boolean) {
+export async function createUser(
+  name: string,
+  email: string,
+  password: string,
+  phoneNumber: string | null,
+  consentToText: boolean,
+  restaurantId: number,
+) {
   const passwordHash = await bcrypt.hash(password, 10);
 
   return prisma.user.create({
@@ -16,7 +22,8 @@ export async function createUser(name: string, email: string, password: string, 
       phoneNumber, // Add phoneNumber field
       consentToText, // Add consentToText field
       role: "employee", // Default role; change this as per your needs
-      status: "pending" // New users require admin approval
+      status: "pending", // New users require admin approval
+      restaurantId, // Associate the user with a restaurant
     },
   });
 }
@@ -34,7 +41,7 @@ export async function getUserByEmail(email: string) {
     },
   });
 }
-  
+
 export async function getUsersByRole(role: string) {
   return prisma.user.findMany({ where: { role } });
 }
@@ -73,6 +80,20 @@ export async function approveUser(userId: number) {
   });
 }
 
+// Function to get users by restaurant ID
+export async function getUsersByRestaurantId(restaurantId: number) {
+  return prisma.user.findMany({
+    where: { restaurantId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      status: true,
+      phoneNumber: true,
+    },
+  });
+}
 
 // Function to verify a user's login credentials
 export async function verifyLogin(email: string, password: string) {

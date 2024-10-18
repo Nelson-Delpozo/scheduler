@@ -5,6 +5,7 @@ import { json, redirect } from "@remix-run/node";
 import { Form, useActionData, useSearchParams } from "@remix-run/react";
 import { useEffect, useRef } from "react";
 
+import { getRestaurantById } from "~/models/restaurant.server";
 import { createUser, getUserByEmail } from "~/models/user.server";
 import { createUserSession } from "~/session.server";
 import { safeRedirect, validateEmail, validatePhoneNumber } from "~/utils";
@@ -15,6 +16,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const email = formData.get("email");
   const password = formData.get("password");
   let phoneNumber = formData.get("phoneNumber");
+  const restaurantId = formData.get("restaurantId");
   const consentToText = formData.get("consentToText") === "on"; // Extract consent value
   const redirectTo = safeRedirect(formData.get("redirectTo"), "/");
 
@@ -25,7 +27,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           name: "Name is required",
           email: null,
           password: null,
-          phoneNumber: null
+          phoneNumber: null,
+          restaurantId: null,
         },
       },
       { status: 400 },
@@ -39,7 +42,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           name: null,
           email: "Email is invalid",
           password: null,
-          phoneNumber: null
+          phoneNumber: null,
+          restaurantId: null,
         },
       },
       { status: 400 },
@@ -52,7 +56,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   if (phoneNumber && !validatePhoneNumber(phoneNumber)) {
     return json(
-      { errors: { name: null, email: null, password: null, phoneNumber: "Phone number must be a valid 10-digit US number" } },
+      {
+        errors: {
+          name: null,
+          email: null,
+          password: null,
+          phoneNumber: "Phone number must be a valid 10-digit US number",
+          restaurantId: null,
+        },
+      },
       { status: 400 }
     );
   }
@@ -64,7 +76,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           name: null,
           email: null,
           password: "Password is required",
-          phoneNumber: null
+          phoneNumber: null,
+          restaurantId: null,
         },
       },
       { status: 400 },
@@ -78,10 +91,42 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           name: null,
           email: null,
           password: "Password is too short",
-          phoneNumber: null
+          phoneNumber: null,
+          restaurantId: null,
         },
       },
       { status: 400 },
+    );
+  }
+
+  if (!restaurantId || typeof restaurantId !== "string" || isNaN(Number(restaurantId))) {
+    return json(
+      {
+        errors: {
+          name: null,
+          email: null,
+          password: null,
+          phoneNumber: null,
+          restaurantId: "Restaurant ID is required and must be a valid number",
+        },
+      },
+      { status: 400 }
+    );
+  }
+
+  const existingRestaurant = await getRestaurantById(Number(restaurantId));
+  if (!existingRestaurant) {
+    return json(
+      {
+        errors: {
+          name: null,
+          email: null,
+          password: null,
+          phoneNumber: null,
+          restaurantId: "Invalid Restaurant ID",
+        },
+      },
+      { status: 400 }
     );
   }
 
@@ -93,14 +138,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           name: null,
           email: "A user already exists with this email",
           password: null,
-          phoneNumber: null
+          phoneNumber: null,
+          restaurantId: null,
         },
       },
       { status: 400 },
     );
   }
 
-  const user = await createUser(name, email, password, phoneNumber, consentToText);
+  const user = await createUser(name, email, password, phoneNumber, consentToText, Number(restaurantId));
 
   // Instead of creating a user session, redirect to a page informing user that admin approval is needed
   return redirect("/account-pending-approval");
@@ -121,6 +167,7 @@ export default function Join() {
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const phoneNumberRef = useRef<HTMLInputElement>(null);
+  const restaurantIdRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (actionData?.errors?.name) {
@@ -131,6 +178,8 @@ export default function Join() {
       passwordRef.current?.focus();
     } else if (actionData?.errors?.phoneNumber) {
       phoneNumberRef.current?.focus();
+    } else if (actionData?.errors?.restaurantId) {
+      restaurantIdRef.current?.focus();
     }
   }, [actionData]);
 
@@ -242,6 +291,32 @@ export default function Join() {
               {actionData?.errors?.phoneNumber ? (
                 <div className="pt-1 text-red-700" id="phoneNumber-error">
                   {actionData.errors.phoneNumber}
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="restaurantId"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Restaurant ID
+            </label>
+            <div className="mt-1">
+              <input
+                id="restaurantId"
+                ref={restaurantIdRef}
+                name="restaurantId"
+                type="text"
+                autoComplete="off"
+                aria-invalid={actionData?.errors?.restaurantId ? true : undefined}
+                aria-describedby="restaurantId-error"
+                className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+              />
+              {actionData?.errors?.restaurantId ? (
+                <div className="pt-1 text-red-700" id="restaurantId-error">
+                  {actionData.errors.restaurantId}
                 </div>
               ) : null}
             </div>
