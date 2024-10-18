@@ -72,6 +72,16 @@ export default function AdminDashboard() {
           >
             Shift Creation
           </NavLink>
+          <NavLink
+            to="/admin-dashboard/restaurant-approval"
+            className={({ isActive }) =>
+              isActive
+                ? "border-b-2 border-blue-500 pb-2 text-blue-600"
+                : "pb-2 text-gray-600 hover:text-blue-500"
+            }
+          >
+            Restaurant Approvals
+          </NavLink>
         </div>
         <Outlet />
         <div className="mt-8">

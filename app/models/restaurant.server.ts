@@ -41,3 +41,22 @@ export async function updateRestaurant(id: number, data: Partial<{ name: string;
 export async function deleteRestaurant(id: number) {
   return prisma.restaurant.delete({ where: { id } });
 }
+
+// Function to get restaurants pending approval
+export async function getPendingRestaurants() {
+    return prisma.restaurant.findMany({
+      where: {
+        status: "pending",
+      },
+    });
+  }
+  
+  // Function to approve a restaurant
+  export async function approveRestaurant(id: number) {
+    return prisma.restaurant.update({
+      where: { id },
+      data: {
+        status: "approved",
+      },
+    });
+  }

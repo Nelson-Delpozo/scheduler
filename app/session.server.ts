@@ -1,8 +1,10 @@
 import { createCookieSessionStorage, redirect } from "@remix-run/node";
+import type { Request } from "@remix-run/node";
 import invariant from "tiny-invariant";
 
-import type { User } from "~/models/user.server";
+// import type { User } from "~/models/user.server";
 import { getUserById } from "~/models/user.server";
+import { prisma } from "~/prisma.server";
 
 invariant(process.env.SESSION_SECRET, "SESSION_SECRET must be set");
 
@@ -20,8 +22,50 @@ export const sessionStorage = createCookieSessionStorage({
 const USER_SESSION_KEY = "userId";
 
 export async function getSession(request: Request) {
-  const cookie = request.headers.get("Cookie");
+  const cookie = request.headers.get("Cookie") ?? "";
   return sessionStorage.getSession(cookie);
+}
+
+export async function requireAdmin(request: Request) {
+  const session = await getSession(request);
+  if (!session) {
+    return null;
+  }
+
+  const userId = session.get("userId");
+  if (!userId) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user || user.role !== "admin") {
+    return null;
+  }
+
+  return user;
+}
+
+
+export async function requireSuperAdmin(request: Request) {
+  const session = await getSession(request);
+  const userId = session.get("userId");
+
+  if (!userId) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (user?.role !== "super-admin") {
+    return null;
+  }
+
+  return user;
 }
 
 export async function getUserId(

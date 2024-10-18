@@ -30,6 +30,7 @@ model Restaurant {
   name        String
   location    String?
   phoneNumber String?
+  status      String   @default("pending") // "pending", "approved"
   users       User[]
   schedules   Schedule[]
   shifts      Shift[] // Back relation to shifts
