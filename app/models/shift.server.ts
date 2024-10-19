@@ -24,6 +24,14 @@ export async function createShift(
   });
 }
 
+export async function getShiftsForEmployee(employeeId: number) {
+  return prisma.shift.findMany({
+    where: {
+      assignedToId: employeeId,
+    },
+  });
+}
+
 // Function to get shifts by restaurant
 export async function getShiftsByRestaurant(restaurantId: number) {
   return prisma.shift.findMany({
