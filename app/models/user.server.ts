@@ -95,6 +95,21 @@ export async function getUsersByRestaurantId(restaurantId: number) {
   });
 }
 
+// Function to update a user
+export async function updateUser(userId: number, data: Partial<{ name: string; role: string; phoneNumber: string }>) {
+  return prisma.user.update({
+    where: { id: userId },
+    data,
+  });
+}
+
+// Function to delete a user
+export async function deleteUser(userId: number) {
+  return prisma.user.delete({
+    where: { id: userId },
+  });
+}
+
 // Function to verify a user's login credentials
 export async function verifyLogin(email: string, password: string) {
   const user = await prisma.user.findUnique({
