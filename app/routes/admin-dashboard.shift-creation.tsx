@@ -40,7 +40,7 @@ export default function ShiftCreation() {
 
   return (
     <div className="mt-8">
-      <h2 className="text-xl mb-4">Manage Shifts</h2>
+      {/* <h2 className="text-xl mb-4">Manage Shifts</h2>
       <ul className="space-y-4">
         {shifts.map((shift) => (
           <li key={shift.id} className="p-4 border rounded-md">
@@ -50,7 +50,7 @@ export default function ShiftCreation() {
             <p>Assigned To: {shift.assignedTo ? shift.assignedTo.name : "Unassigned"}</p>
           </li>
         ))}
-      </ul>
+      </ul> */}
       <Form method="post" className="space-y-4 mt-4">
         <input type="hidden" name="restaurantId" value={restaurantId} />
         <input type="hidden" name="createdById" value={createdById} />

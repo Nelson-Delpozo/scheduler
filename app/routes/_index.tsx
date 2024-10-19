@@ -1,7 +1,7 @@
 // app/routes/_index.tsx
 
 import { LoaderFunction, redirect } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
+import { Link, useLoaderData, Form } from "@remix-run/react";
 
 import { getUserId } from "~/session.server";
 
@@ -37,6 +37,11 @@ export default function Index() {
           <button className="btn-primary">View My Shifts</button>
         </Link>
       )}
+      <Form action="/logout" method="post" className="mt-4">
+        <button type="submit" className="btn-primary bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+          Logout
+        </button>
+      </Form>
     </div>
   );
 }
