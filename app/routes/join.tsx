@@ -2,7 +2,7 @@
 
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, useActionData, useSearchParams } from "@remix-run/react";
+import { Form, Link, useActionData, useSearchParams } from "@remix-run/react";
 import { useEffect, useRef } from "react";
 
 import { getRestaurantById } from "~/models/restaurant.server";
@@ -65,7 +65,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           restaurantId: null,
         },
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -99,7 +99,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  if (!restaurantId || typeof restaurantId !== "string" || isNaN(Number(restaurantId))) {
+  if (
+    !restaurantId ||
+    typeof restaurantId !== "string" ||
+    isNaN(Number(restaurantId))
+  ) {
     return json(
       {
         errors: {
@@ -110,7 +114,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           restaurantId: "Restaurant ID is required and must be a valid number",
         },
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -126,7 +130,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           restaurantId: "Invalid Restaurant ID",
         },
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -146,7 +150,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
   }
 
-  const user = await createUser(name, email, password, phoneNumber, consentToText, Number(restaurantId));
+  const user = await createUser(
+    name,
+    email,
+    password,
+    phoneNumber,
+    consentToText,
+    Number(restaurantId),
+  );
 
   // Instead of creating a user session, redirect to a page informing user that admin approval is needed
   return redirect("/account-pending-approval");
@@ -310,7 +321,9 @@ export default function Join() {
                 name="restaurantId"
                 type="text"
                 autoComplete="off"
-                aria-invalid={actionData?.errors?.restaurantId ? true : undefined}
+                aria-invalid={
+                  actionData?.errors?.restaurantId ? true : undefined
+                }
                 aria-describedby="restaurantId-error"
                 className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
               />
@@ -336,6 +349,18 @@ export default function Join() {
           >
             Create Account
           </button>
+          <div className="text-center text-sm text-gray-500">
+            Already have an account?{" "}
+            <Link
+              className="text-blue-500 underline"
+              to={{
+                pathname: "/login",
+                search: searchParams.toString(),
+              }}
+            >
+              Sign in
+            </Link>
+          </div>
         </Form>
       </div>
     </div>

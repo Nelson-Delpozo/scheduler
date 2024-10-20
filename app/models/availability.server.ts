@@ -11,7 +11,7 @@ export async function createAvailability(
   return prisma.availability.create({
     data: {
       userId,
-      day: new Date(date).toLocaleDateString("en-US", { weekday: "long" }), // Convert date to weekday name
+      date: new Date(date).toLocaleDateString("en-US", { weekday: "long" }), // Convert date to weekday name
       startTime,
       endTime,
     },

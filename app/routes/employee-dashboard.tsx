@@ -6,7 +6,7 @@ import { useState } from "react";
 import { getShiftsForEmployee } from "~/models/shift.server";
 import { requireUser } from "~/session.server";
 
-import { createAvailability, getAvailabilityForUser } from "./availability.server";
+import { createAvailability, getAvailabilityForUser } from "../models/availability.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const user = await requireUser(request);
