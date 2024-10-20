@@ -2,6 +2,8 @@
 
 import { prisma } from "~/prisma.server";
 
+
+
 export async function createRestaurant(name: string, location?: string, phoneNumber?: string) {
   return prisma.restaurant.create({
     data: {

@@ -41,22 +41,32 @@ export const action: ActionFunction = async ({ request }) => {
       const date = formData.get("date") as string;
       const startTime = formData.get("startTime") as string;
       const endTime = formData.get("endTime") as string;
-      const assignedToId = parseInt(formData.get("assignedToId") as string);
+      const assignedToIdValue = formData.get("assignedToId");
+      const assignedToId = assignedToIdValue
+        ? parseInt(assignedToIdValue as string)
+        : undefined;
       const restaurantId = parseInt(formData.get("restaurantId") as string);
       const createdById = parseInt(formData.get("createdById") as string);
       const role = formData.get("role") as string;
+
+      // // Parse assignedToId if it exists, otherwise set it to null
+      // const assignedToId = assignedToIdValue
+      //   ? parseInt(assignedToIdValue as string)
+      //   : null;
 
       // Validate the form data
       if (
         !date ||
         !startTime ||
         !endTime ||
-        isNaN(assignedToId) ||
         isNaN(restaurantId) ||
         isNaN(createdById)
       ) {
         return json(
-          { success: false, error: "Missing or invalid data." },
+          {
+            success: false,
+            error: "Missing or invalid data.",
+          },
           { status: 400 },
         );
       }
@@ -70,7 +80,7 @@ export const action: ActionFunction = async ({ request }) => {
           restaurantId,
           createdById,
           undefined,
-          assignedToId,
+          assignedToId, // Will be null if not provided
           role,
         );
         return redirect("/admin-dashboard");
@@ -78,6 +88,7 @@ export const action: ActionFunction = async ({ request }) => {
         return json({ error: (error as Error).message }, { status: 400 });
       }
     }
+
     case "approve": {
       const userId = formData.get("userId") as string;
       if (userId) {
@@ -133,7 +144,7 @@ export const action: ActionFunction = async ({ request }) => {
 };
 
 export default function AdminDashboard() {
-  const { pendingUsers, restaurantUsers, shifts, restaurantId } =
+  const { user, pendingUsers, restaurantUsers, shifts, restaurantId } =
     useLoaderData<typeof loader>();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [modalUser, setModalUser] = useState<{
@@ -173,7 +184,6 @@ export default function AdminDashboard() {
       </div>
       <div className="mx-auto w-full max-w-5xl px-4 pb-8 pt-4 sm:px-8">
         <h1 className="mb-4 text-2xl font-bold">Admin Dashboard</h1>
-
         <div className="mb-8 flex">
           <button
             onClick={() => setActiveTab("users")}
@@ -246,13 +256,13 @@ export default function AdminDashboard() {
             <h2 className="mb-4 mt-8 text-xl">Manage Users</h2>
             <ul className="space-y-4">
               {restaurantUsers
-                .filter((user) => user.status?.toLowerCase() === "approved") // Normalize the status to lowercase
+                .filter((user) => user.status?.toLowerCase() === "approved")
                 .map((user) => (
                   <li
                     key={user.id}
-                    className="flex items-center justify-between rounded-md border p-4"
+                    className="flex flex-col items-center justify-between space-y-2 rounded-md border p-4 sm:flex-row sm:space-y-0"
                   >
-                    <div>
+                    <div className="w-full sm:w-auto">
                       <p className="font-semibold">{user.name}</p>
                       <p className="text-gray-600">{user.email}</p>
                       <p className="text-gray-600">
@@ -260,20 +270,20 @@ export default function AdminDashboard() {
                       </p>
                       <p className="text-gray-600">Role: {user.role}</p>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="mt-2 flex w-full flex-col space-y-2 sm:mt-0 sm:w-auto sm:flex-row sm:space-x-2 sm:space-y-0">
                       <button
                         type="button"
                         onClick={() => openModal(user)}
-                        className="rounded bg-yellow-500 px-4 py-2 text-white hover:bg-yellow-600"
+                        className="w-full rounded bg-yellow-500 px-4 py-2 text-white hover:bg-yellow-600 sm:w-auto"
                       >
                         Edit User
                       </button>
-                      <Form method="post">
+                      <Form method="post" className="w-full sm:w-auto">
                         <input type="hidden" name="userId" value={user.id} />
                         <input type="hidden" name="actionType" value="delete" />
                         <button
                           type="submit"
-                          className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+                          className="w-full rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600 sm:w-auto"
                         >
                           Delete User
                         </button>
@@ -324,18 +334,15 @@ export default function AdminDashboard() {
                   required
                   className="rounded border p-2"
                 />
-                <select
-                  name="assignedToId"
-                  className="rounded border p-2"
-                  required
-                >
-                  <option value="">Select Employee</option>
+                <select name="assignedToId" className="rounded border p-2">
+                  <option value="">Unassigned</option>
                   {restaurantUsers.map((user) => (
                     <option key={user.id} value={user.id}>
                       {user.id} - {user.name}
                     </option>
                   ))}
                 </select>
+
                 <select name="role" className="rounded border p-2" required>
                   <option value="">Select Role</option>
                   <option value="dr-manager">DR Manager</option>
@@ -393,68 +400,70 @@ export default function AdminDashboard() {
 
       {modalUser ? (
         <Modal isOpen={isModalOpen} onClose={closeModal}>
-          <h2 className="mb-4 text-xl font-bold">Edit User</h2>
-          <Form method="post">
-            <input type="hidden" name="userId" value={modalUser.id} />
-            <input type="hidden" name="actionType" value="update" />
-            <div className="mb-4">
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Name
-              </label>
-              <input
-                type="text"
-                name="name"
-                defaultValue={modalUser.name}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-              />
-            </div>
-            <div className="mb-4">
-              <label
-                htmlFor="role"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Role
-              </label>
-              <input
-                type="text"
-                name="role"
-                defaultValue={modalUser.role}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-              />
-            </div>
-            <div className="mb-4">
-              <label
-                htmlFor="phoneNumber"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Phone Number
-              </label>
-              <input
-                type="text"
-                name="phoneNumber"
-                defaultValue={modalUser.phoneNumber ?? ""}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-              />
-            </div>
-            <div className="flex space-x-2">
-              <button
-                type="submit"
-                className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-              >
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={closeModal}
-                className="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-            </div>
-          </Form>
+          <div className="mx-auto w-full max-w-md rounded-md bg-white p-6 shadow-lg sm:max-w-lg md:max-w-2xl">
+            <h2 className="mb-4 text-xl font-bold">Edit User</h2>
+            <Form method="post">
+              <input type="hidden" name="userId" value={modalUser.id} />
+              <input type="hidden" name="actionType" value="update" />
+              <div className="mb-4">
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  defaultValue={modalUser.name}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                />
+              </div>
+              <div className="mb-4">
+                <label
+                  htmlFor="role"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Role
+                </label>
+                <input
+                  type="text"
+                  name="role"
+                  defaultValue={modalUser.role}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                />
+              </div>
+              <div className="mb-4">
+                <label
+                  htmlFor="phoneNumber"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  name="phoneNumber"
+                  defaultValue={modalUser.phoneNumber ?? ""}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                />
+              </div>
+              <div className="mt-6 flex justify-end space-x-2">
+                <button
+                  type="submit"
+                  className="rounded bg-blue-500 px-6 py-2 text-white hover:bg-blue-600"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="rounded bg-gray-500 px-6 py-2 text-white hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+              </div>
+            </Form>
+          </div>
         </Modal>
       ) : null}
     </div>

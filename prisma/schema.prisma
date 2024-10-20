@@ -27,7 +27,7 @@ model User {
 }
 
 model Restaurant {
-  id          Int      @id @default(autoincrement())
+  id          Int   @unique
   name        String
   location    String?
   phoneNumber String?

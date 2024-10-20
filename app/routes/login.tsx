@@ -30,7 +30,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (!validateEmail(email)) {
     return json(
       { errors: { email: "Email is invalid", password: null } },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -38,7 +38,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (typeof password !== "string" || password.length === 0) {
     return json(
       { errors: { email: null, password: "Password is required" } },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -46,47 +46,52 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (password.length < 8) {
     return json(
       { errors: { email: null, password: "Password is too short" } },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
-// Fetch the user by email
-const user = await getUserByEmail(email);
+  // Fetch the user by email
+  const user = await getUserByEmail(email);
 
-if (!user) {
-  return json(
-    { errors: { email: "Invalid email or password", password: null } },
-    { status: 400 }
-  );
-}
+  if (!user) {
+    return json(
+      { errors: { email: "Invalid email or password", password: null } },
+      { status: 400 },
+    );
+  }
 
-// Check if user is approved
-if (user.status !== "approved") {
-  return json(
-    { errors: { email: "Your account is still pending approval.", password: null } },
-    { status: 400 }
-  );
-}
+  // Check if user is approved
+  if (user.status !== "approved") {
+    return json(
+      {
+        errors: {
+          email: "Your account is still pending approval.",
+          password: null,
+        },
+      },
+      { status: 400 },
+    );
+  }
 
-// Verify user credentials
-const isValidPassword = await verifyLogin(email, password);
+  // Verify user credentials
+  const isValidPassword = await verifyLogin(email, password);
 
-if (!isValidPassword) {
-  return json(
-    { errors: { email: "Invalid email or password", password: null } },
-    { status: 400 }
-  );
-}
+  if (!isValidPassword) {
+    return json(
+      { errors: { email: "Invalid email or password", password: null } },
+      { status: 400 },
+    );
+  }
 
   // Redirect based on user role (e.g., manager or employee)
   // const redirectPath = user.role === "manager" ? "/admin-dashboard" : "/employee-dashboard";
-    // Redirect based on user role
-    let redirectPath = "/employee-dashboard";
-    if (user.role === "admin") {
-      redirectPath = "/admin-dashboard";
-    } else if (user.role === "super-admin") {
-      redirectPath = "/super-admin-dashboard";
-    }
+  // Redirect based on user role
+  let redirectPath = "/employee-dashboard";
+  if (user.role === "admin") {
+    redirectPath = "/admin-dashboard";
+  } else if (user.role === "super-admin") {
+    redirectPath = "/super-admin-dashboard";
+  }
 
   return createUserSession({
     redirectTo: redirectPath,
@@ -120,9 +125,11 @@ export default function LoginPage() {
     <div className="flex min-h-full flex-col justify-center">
       <div className="mx-auto w-full max-w-md px-8">
         {/* Display general error message if login fails */}
-        {actionData?.errors?.general ? <div className="mb-4 rounded bg-red-100 p-4 text-red-700">
+        {actionData?.errors?.general ? (
+          <div className="mb-4 rounded bg-red-100 p-4 text-red-700">
             {actionData.errors.general}
-          </div> : null}
+          </div>
+        ) : null}
         <Form method="post" className="space-y-6">
           <div>
             <label
@@ -186,8 +193,8 @@ export default function LoginPage() {
           >
             Log in
           </button>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
+          <div className="mt-4 flex flex-col items-center justify-between sm:flex-row">
+            <div className="mb-4 flex items-center sm:mb-0">
               <input
                 id="remember"
                 name="remember"
@@ -202,7 +209,7 @@ export default function LoginPage() {
               </label>
             </div>
             <div className="text-center text-sm text-gray-500">
-              Don&apos;t have an account?{" "}
+              <span>Don&apos;t have an account? </span>
               <Link
                 className="text-blue-500 underline"
                 to={{
