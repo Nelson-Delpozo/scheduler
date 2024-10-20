@@ -28,6 +28,31 @@ export async function createUser(
   });
 }
 
+// Function to create a new admin user
+export async function createAdminUser(
+  name: string,
+  email: string,
+  password: string,
+  phoneNumber: string,
+  consentToText: boolean,
+  restaurantId: number,
+) {
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  return prisma.user.create({
+    data: {
+      name,
+      email,
+      password: passwordHash,
+      phoneNumber, // Add phoneNumber field
+      consentToText, // Add consentToText field
+      role: "admin", // Default role; change this as per your needs
+      status: "pending", // New users require admin approval
+      restaurantId, // Associate the user with a restaurant
+    },
+  });
+}
+
 export async function getUserByEmail(email: string) {
   return prisma.user.findUnique({
     where: { email },

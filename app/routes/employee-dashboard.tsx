@@ -89,12 +89,17 @@ export default function EmployeeDashboard() {
               <h2 className="text-xl mb-4">My Shifts</h2>
               <ul className="space-y-4">
                 {shifts.length > 0 ? (
-                  shifts.map((shift: { id: number; date: string; startTime: string; endTime: string }) => (
+                  shifts.map((shift: { id: number; date: string; startTime: string; endTime: string; role: string }) => (
                     <li key={shift.id} className="flex justify-between items-center p-4 border rounded-md">
                       <div>
                         <p className="font-semibold">Shift Date: {new Date(shift.date).toLocaleDateString()}</p>
                         <p className="text-gray-600">Start Time: {new Date(shift.startTime).toLocaleTimeString()}</p>
                         <p className="text-gray-600">End Time: {new Date(shift.endTime).toLocaleTimeString()}</p>
+                        <p className="text-gray-600">Role: {shift.role || "Not Specified"}</p>
+                        <p className="font-semibold">
+                      Shift Date: {new Date(shift.date).toLocaleDateString()}
+                    </p>
+
                       </div>
                     </li>
                   ))

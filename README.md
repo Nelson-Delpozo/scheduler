@@ -172,3 +172,19 @@ This project uses ESLint for linting. That is configured in `.eslintrc.cjs`.
 ### Formatting
 
 We use [Prettier](https://prettier.io/) for auto-formatting in this project. It's recommended to install an editor plugin (like the [VSCode Prettier plugin](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)) to get auto-formatting on save. There's also a `npm run format` script you can run to format all files in the project.
+
+
+this is the restaurant scheduler app
+
+we have so far:
+users, employee, admin, and super admin
+restaurants
+shifts
+availability
+
+we still need next:
+super-admin dashboard to approve restaurants, and full control of everything
+need to add edit/delete functionality to shifts in the admin-dashboard, including 'assign to'
+need to add edit/delete functionality to availabilities in employee dashboard
+need to add some functionality to match shifts and availabilities, make it easier for the admin to assign shifts to employees
+need to ensure restaurant id's aren't close or similar, and/or improve the way a new user registers with his restaurant code

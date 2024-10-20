@@ -3,9 +3,15 @@ import { json, redirect } from "@remix-run/node";
 import { useLoaderData, Form } from "@remix-run/react";
 import { useState } from "react";
 
-import Modal from '~/components/Modal';
+import Modal from "~/components/Modal";
 import { createShift, getShiftsByRestaurant } from "~/models/shift.server";
-import { getUsersPendingApproval, approveUser, getUsersByRestaurantId, updateUser, deleteUser } from "~/models/user.server";
+import {
+  getUsersPendingApproval,
+  approveUser,
+  getUsersByRestaurantId,
+  updateUser,
+  deleteUser,
+} from "~/models/user.server";
 import { requireAdmin } from "~/session.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -16,9 +22,14 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const pendingUsers = await getUsersPendingApproval();
   const restaurantUsers = await getUsersByRestaurantId(user.restaurantId!);
-  
+
   const shifts = await getShiftsByRestaurant(user.restaurantId!);
-  return json({ pendingUsers, restaurantUsers, shifts, restaurantId: user.restaurantId });
+  return json({
+    pendingUsers,
+    restaurantUsers,
+    shifts,
+    restaurantId: user.restaurantId,
+  });
 };
 
 export const action: ActionFunction = async ({ request }) => {
@@ -33,10 +44,21 @@ export const action: ActionFunction = async ({ request }) => {
       const assignedToId = parseInt(formData.get("assignedToId") as string);
       const restaurantId = parseInt(formData.get("restaurantId") as string);
       const createdById = parseInt(formData.get("createdById") as string);
+      const role = formData.get("role") as string;
 
       // Validate the form data
-      if (!date || !startTime || !endTime || isNaN(assignedToId) || isNaN(restaurantId) || isNaN(createdById)) {
-        return json({ success: false, error: "Missing or invalid data." }, { status: 400 });
+      if (
+        !date ||
+        !startTime ||
+        !endTime ||
+        isNaN(assignedToId) ||
+        isNaN(restaurantId) ||
+        isNaN(createdById)
+      ) {
+        return json(
+          { success: false, error: "Missing or invalid data." },
+          { status: 400 },
+        );
       }
 
       try {
@@ -48,7 +70,8 @@ export const action: ActionFunction = async ({ request }) => {
           restaurantId,
           createdById,
           undefined,
-          assignedToId
+          assignedToId,
+          role
         );
         return redirect("/admin-dashboard");
       } catch (error) {
@@ -60,7 +83,10 @@ export const action: ActionFunction = async ({ request }) => {
       if (userId) {
         await approveUser(parseInt(userId));
       } else {
-        return json({ success: false, error: "Invalid user ID." }, { status: 400 });
+        return json(
+          { success: false, error: "Invalid user ID." },
+          { status: 400 },
+        );
       }
       break;
     }
@@ -71,9 +97,16 @@ export const action: ActionFunction = async ({ request }) => {
       const phoneNumber = formData.get("phoneNumber") as string | null;
 
       if (userId && name && role) {
-        await updateUser(parseInt(userId), { name, role, phoneNumber: phoneNumber ?? undefined });
+        await updateUser(parseInt(userId), {
+          name,
+          role,
+          phoneNumber: phoneNumber ?? undefined,
+        });
       } else {
-        return json({ success: false, error: "Invalid user data." }, { status: 400 });
+        return json(
+          { success: false, error: "Invalid user data." },
+          { status: 400 },
+        );
       }
       break;
     }
@@ -82,24 +115,41 @@ export const action: ActionFunction = async ({ request }) => {
       if (userId) {
         await deleteUser(parseInt(userId));
       } else {
-        return json({ success: false, error: "Invalid user ID." }, { status: 400 });
+        return json(
+          { success: false, error: "Invalid user ID." },
+          { status: 400 },
+        );
       }
       break;
     }
     default:
-      return json({ success: false, error: "Invalid action type." }, { status: 400 });
+      return json(
+        { success: false, error: "Invalid action type." },
+        { status: 400 },
+      );
   }
 
   return redirect("/admin-dashboard");
 };
 
 export default function AdminDashboard() {
-  const { pendingUsers, restaurantUsers, shifts, restaurantId } = useLoaderData<typeof loader>();
+  const { pendingUsers, restaurantUsers, shifts, restaurantId } =
+    useLoaderData<typeof loader>();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [modalUser, setModalUser] = useState<{ id: number; name: string; role: string; phoneNumber: string | null } | null>(null);
+  const [modalUser, setModalUser] = useState<{
+    id: number;
+    name: string;
+    role: string;
+    phoneNumber: string | null;
+  } | null>(null);
   const [activeTab, setActiveTab] = useState("users");
 
-  const openModal = (user: { id: number; name: string; role: string; phoneNumber: string | null }) => {
+  const openModal = (user: {
+    id: number;
+    name: string;
+    role: string;
+    phoneNumber: string | null;
+  }) => {
     setModalUser(user);
     setIsModalOpen(true);
   };
@@ -111,52 +161,67 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex min-h-full flex-col items-center">
-      <div className="w-full flex justify-between items-center px-4 py-4 sm:px-8">
+      <div className="flex w-full items-center justify-between px-4 py-4 sm:px-8">
         <Form action="/logout" method="post">
-          <button type="submit" className="btn-primary bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+          <button
+            type="submit"
+            className="btn-primary rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+          >
             Logout
           </button>
         </Form>
       </div>
-      <div className="mx-auto w-full max-w-5xl px-4 sm:px-8 pt-4 pb-8">
-        <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-        
-        <div className="flex mb-8">
+      <div className="mx-auto w-full max-w-5xl px-4 pb-8 pt-4 sm:px-8">
+        <h1 className="mb-4 text-2xl font-bold">Admin Dashboard</h1>
+
+        <div className="mb-8 flex">
           <button
             onClick={() => setActiveTab("users")}
-            className={`px-4 py-2 text-sm font-medium rounded ${
-              activeTab === "users" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800 hover:bg-blue-500"
+            className={`rounded px-4 py-2 text-sm font-medium ${
+              activeTab === "users"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-blue-500"
             }`}
           >
             Users
           </button>
           <button
             onClick={() => setActiveTab("schedules")}
-            className={`px-4 py-2 text-sm font-medium rounded ${
-              activeTab === "schedules" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800 hover:bg-blue-500"
+            className={`rounded px-4 py-2 text-sm font-medium ${
+              activeTab === "schedules"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-blue-500"
             }`}
           >
             Schedules
           </button>
           <button
             onClick={() => setActiveTab("shifts")}
-            className={`px-4 py-2 text-sm font-medium rounded ${
-              activeTab === "shifts" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800 hover:bg-blue-500"
+            className={`rounded px-4 py-2 text-sm font-medium ${
+              activeTab === "shifts"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-blue-500"
             }`}
           >
             Shifts
           </button>
         </div>
 
-        {activeTab === "users" ? <div className="mt-8">
-            <h2 className="text-xl mb-4">Users Awaiting Approval</h2>
+        {activeTab === "users" ? (
+          <div className="mt-8">
+            <h2 className="mb-4 text-xl">Users Awaiting Approval</h2>
             {pendingUsers.length > 0 ? (
               <ul className="space-y-4">
                 {pendingUsers.map((user) => (
-                  <li key={user.id} className="flex justify-between items-center p-4 border rounded-md">
+                  <li
+                    key={user.id}
+                    className="flex items-center justify-between rounded-md border p-4"
+                  >
                     <div>
                       <p className="font-semibold">{user.email}</p>
-                      <p className="text-gray-600">{user.phoneNumber || "No phone number provided"}</p>
+                      <p className="text-gray-600">
+                        {user.phoneNumber || "No phone number provided"}
+                      </p>
                     </div>
                     <Form method="post">
                       <input type="hidden" name="userId" value={user.id} />
@@ -172,17 +237,24 @@ export default function AdminDashboard() {
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-700">No users are currently pending approval.</p>
+              <p className="text-gray-700">
+                No users are currently pending approval.
+              </p>
             )}
 
-            <h2 className="text-xl mt-8 mb-4">Manage Users</h2>
+            <h2 className="mb-4 mt-8 text-xl">Manage Users</h2>
             <ul className="space-y-4">
               {restaurantUsers.map((user) => (
-                <li key={user.id} className="flex justify-between items-center p-4 border rounded-md">
+                <li
+                  key={user.id}
+                  className="flex items-center justify-between rounded-md border p-4"
+                >
                   <div>
                     <p className="font-semibold">{user.name}</p>
                     <p className="text-gray-600">{user.email}</p>
-                    <p className="text-gray-600">{user.phoneNumber || "No phone number provided"}</p>
+                    <p className="text-gray-600">
+                      {user.phoneNumber || "No phone number provided"}
+                    </p>
                     <p className="text-gray-600">Role: {user.role}</p>
                   </div>
                   <div className="flex space-x-2">
@@ -207,30 +279,71 @@ export default function AdminDashboard() {
                 </li>
               ))}
             </ul>
-          </div> : null}
+          </div>
+        ) : null}
 
-        {activeTab === "schedules" ? <div className="mt-8">
-            <h2 className="text-xl mb-4">Schedules</h2>
-            <p className="text-gray-700">Schedules functionality coming soon.</p>
-          </div> : null}
+        {activeTab === "schedules" ? (
+          <div className="mt-8">
+            <h2 className="mb-4 text-xl">Schedules</h2>
+            <p className="text-gray-700">
+              Schedules functionality coming soon.
+            </p>
+          </div>
+        ) : null}
 
-        {activeTab === "shifts" ? <div className="mt-8">
-            <h2 className="text-xl mb-4">Create and Manage Shifts</h2>
+        {activeTab === "shifts" ? (
+          <div className="mt-8">
+            <h2 className="mb-4 text-xl">Create and Manage Shifts</h2>
             <Form method="post" className="mb-4">
               <input type="hidden" name="actionType" value="create-shift" />
-              <input type="hidden" name="restaurantId" value={restaurantId || ''} />
-              <input type="hidden" name="createdById" value={restaurantUsers[0]?.id || ''} />
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <input type="date" name="date" required className="border rounded p-2" />
-                <input type="time" name="startTime" required className="border rounded p-2" />
-                <input type="time" name="endTime" required className="border rounded p-2" />
-                <select name="assignedToId" className="border rounded p-2" required>
+              <input type="hidden" name="restaurantId" value={restaurantId} />
+              <input
+                type="hidden"
+                name="createdById"
+                value={restaurantUsers[0]?.id || ""}
+              />
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <input
+                  type="date"
+                  name="date"
+                  required
+                  className="rounded border p-2"
+                />
+                <input
+                  type="time"
+                  name="startTime"
+                  required
+                  className="rounded border p-2"
+                />
+                <input
+                  type="time"
+                  name="endTime"
+                  required
+                  className="rounded border p-2"
+                />
+                <select
+                  name="assignedToId"
+                  className="rounded border p-2"
+                  required
+                >
                   <option value="">Select Employee</option>
                   {restaurantUsers.map((user) => (
                     <option key={user.id} value={user.id}>
                       {user.id} - {user.name}
                     </option>
                   ))}
+                </select>
+                <select name="role" className="rounded border p-2" required>
+                  <option value="">Select Role</option>
+                  <option value="dr-manager">DR Manager</option>
+                  <option value="bar-manager">Bar Manager</option>
+                  <option value="kitchen-manager">Kitchen Manager</option>
+                  <option value="server">Server</option>
+                  <option value="bartender">Bartender</option>
+                  <option value="chips">Chips</option>
+                  <option value="cook">Cook</option>
+                  <option value="busser">Busser</option>
+                  <option value="barback">Barback</option>
                 </select>
               </div>
               <button
@@ -242,26 +355,54 @@ export default function AdminDashboard() {
             </Form>
             <ul className="space-y-4">
               {shifts.map((shift) => (
-                <li key={shift.id} className="flex justify-between items-center p-4 border rounded-md">
+                <li
+                  key={shift.id}
+                  className="flex items-center justify-between rounded-md border p-4"
+                >
                   <div>
-                    <p className="font-semibold">Shift Date: {new Date(shift.date).toLocaleDateString()}</p>
-                    <p className="text-gray-600">Start Time: {new Date(shift.startTime).toLocaleTimeString()}</p>
-                    <p className="text-gray-600">End Time: {new Date(shift.endTime).toLocaleTimeString()}</p>
-                    <p className="text-gray-600">Assigned To: {shift.assignedTo ? `${shift.assignedTo.id} - ${shift.assignedTo.name}` : "Not Assigned"}</p>
+                    <p className="font-semibold">
+                      Shift Date: {new Date(shift.date).toLocaleDateString()}
+                    </p>
+                    <p className="text-gray-600">
+                      Start Time:{" "}
+                      {new Date(shift.startTime).toLocaleTimeString()}
+                    </p>
+                    <p className="text-gray-600">
+                      End Time: {new Date(shift.endTime).toLocaleTimeString()}
+                    </p>
+                    <p className="text-gray-600">
+                      Assigned To:{" "}
+                      {shift.assignedTo
+                        ? `${shift.assignedTo.id} - ${shift.assignedTo.name}`
+                        : "Not Assigned"}
+                    </p>
+                    <p className="text-gray-600">
+                      Role:{" "}
+                      {shift.assignedTo
+                        ? `${shift.role}`
+                        : "Not Assigned"}
+                    </p>
                   </div>
                 </li>
               ))}
             </ul>
-          </div> : null}
+          </div>
+        ) : null}
       </div>
 
-      {modalUser ? <Modal isOpen={isModalOpen} onClose={closeModal}>
-          <h2 className="text-xl font-bold mb-4">Edit User</h2>
+      {modalUser ? (
+        <Modal isOpen={isModalOpen} onClose={closeModal}>
+          <h2 className="mb-4 text-xl font-bold">Edit User</h2>
           <Form method="post">
             <input type="hidden" name="userId" value={modalUser.id} />
             <input type="hidden" name="actionType" value="update" />
             <div className="mb-4">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Name
+              </label>
               <input
                 type="text"
                 name="name"
@@ -270,7 +411,12 @@ export default function AdminDashboard() {
               />
             </div>
             <div className="mb-4">
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
+              <label
+                htmlFor="role"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Role
+              </label>
               <input
                 type="text"
                 name="role"
@@ -279,7 +425,12 @@ export default function AdminDashboard() {
               />
             </div>
             <div className="mb-4">
-              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
+              <label
+                htmlFor="phoneNumber"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Phone Number
+              </label>
               <input
                 type="text"
                 name="phoneNumber"
@@ -303,7 +454,8 @@ export default function AdminDashboard() {
               </button>
             </div>
           </Form>
-        </Modal> : null}
+        </Modal>
+      ) : null}
     </div>
   );
 }

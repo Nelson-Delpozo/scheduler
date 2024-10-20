@@ -5,7 +5,7 @@ import { useRef, useEffect } from "react";
 
 
 import { createRestaurant } from "~/models/restaurant.server";
-import { createUser } from "~/models/user.server";
+import { createAdminUser, createUser } from "~/models/user.server";
 import { validatePhoneNumber, validateEmail } from "~/utils";
 
 export const loader: LoaderFunction = async () => {
@@ -52,7 +52,7 @@ export const action: ActionFunction = async ({ request }) => {
   const restaurant = await createRestaurant(name, location, phoneNumber);
 
   // Create admin user for the restaurant
-  await createUser(name, email, password, phoneNumber, true, restaurant.id);
+  await createAdminUser(name, email, password, phoneNumber, true, restaurant.id);
 
   return redirect("/account-pending-approval");
 };

@@ -9,7 +9,8 @@ export async function createShift(
   restaurantId: number,
   createdById: number,
   scheduleId?: number,
-  assignedToId?: number
+  assignedToId?: number,
+  role?: string, // New parameter for shift role
 ) {
   return prisma.shift.create({
     data: {
@@ -20,32 +21,46 @@ export async function createShift(
       createdById,
       scheduleId,
       assignedToId,
+      role
     },
   });
 }
 
 export async function getShiftsForEmployee(employeeId: number) {
   return prisma.shift.findMany({
-    where: {
-      assignedToId: employeeId,
+    where: { assignedToId: employeeId },
+    select: {
+      id: true,
+      date: true,
+      startTime: true,
+      endTime: true,
+      role: true, // Ensure the role field is selected
+    },
+    orderBy: {
+      date: 'desc',
     },
   });
 }
 
-// Function to get shifts by restaurant
 export async function getShiftsByRestaurant(restaurantId: number) {
   return prisma.shift.findMany({
     where: { restaurantId },
-    include: {
+    select: {
+      id: true,
+      date: true,
+      startTime: true,
+      endTime: true,
+      role: true, // Include the role field
       assignedTo: {
-        select: {
-          id: true,
-          name: true,
-        },
+        select: { id: true, name: true },
       },
+    },
+    orderBy: {
+      date: 'desc',
     },
   });
 }
+
 
 // Function to get shift by ID
 export async function getShiftById(id: number) {
@@ -67,7 +82,7 @@ export async function updateShift(
     startTime: Date;
     endTime: Date;
     assignedToId: number;
-  }>
+  }>,
 ) {
   return prisma.shift.update({
     where: { id },
