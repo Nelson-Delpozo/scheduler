@@ -188,3 +188,5 @@ need to add edit/delete functionality to shifts in the admin-dashboard, includin
 need to add edit/delete functionality to availabilities in employee dashboard
 need to add some functionality to match shifts and availabilities, make it easier for the admin to assign shifts to employees
 need to ensure restaurant id's aren't close or similar, and/or improve the way a new user registers with his restaurant code
+when registering new restaurant, add field to catch admin's name in addition to existing restaurant name
+name not showing up in users list

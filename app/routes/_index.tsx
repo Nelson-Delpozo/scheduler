@@ -34,7 +34,7 @@ export default function Index() {
         </Link>
       ) : (
         <Link to="/employee-dashboard">
-          <button className="btn-primary">View My Shifts</button>
+          <button className="btn-primary">Employee Dashboard</button>
         </Link>
       )}
       <Form action="/logout" method="post" className="mt-4">

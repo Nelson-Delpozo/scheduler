@@ -71,7 +71,7 @@ export const action: ActionFunction = async ({ request }) => {
           createdById,
           undefined,
           assignedToId,
-          role
+          role,
         );
         return redirect("/admin-dashboard");
       } catch (error) {
@@ -218,6 +218,7 @@ export default function AdminDashboard() {
                     className="flex items-center justify-between rounded-md border p-4"
                   >
                     <div>
+                      <p className="font-semibold">{user.name}</p>
                       <p className="font-semibold">{user.email}</p>
                       <p className="text-gray-600">
                         {user.phoneNumber || "No phone number provided"}
@@ -244,40 +245,42 @@ export default function AdminDashboard() {
 
             <h2 className="mb-4 mt-8 text-xl">Manage Users</h2>
             <ul className="space-y-4">
-              {restaurantUsers.map((user) => (
-                <li
-                  key={user.id}
-                  className="flex items-center justify-between rounded-md border p-4"
-                >
-                  <div>
-                    <p className="font-semibold">{user.name}</p>
-                    <p className="text-gray-600">{user.email}</p>
-                    <p className="text-gray-600">
-                      {user.phoneNumber || "No phone number provided"}
-                    </p>
-                    <p className="text-gray-600">Role: {user.role}</p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => openModal(user)}
-                      className="rounded bg-yellow-500 px-4 py-2 text-white hover:bg-yellow-600"
-                    >
-                      Edit User
-                    </button>
-                    <Form method="post">
-                      <input type="hidden" name="userId" value={user.id} />
-                      <input type="hidden" name="actionType" value="delete" />
+              {restaurantUsers
+                .filter((user) => user.status?.toLowerCase() === "approved") // Normalize the status to lowercase
+                .map((user) => (
+                  <li
+                    key={user.id}
+                    className="flex items-center justify-between rounded-md border p-4"
+                  >
+                    <div>
+                      <p className="font-semibold">{user.name}</p>
+                      <p className="text-gray-600">{user.email}</p>
+                      <p className="text-gray-600">
+                        {user.phoneNumber || "No phone number provided"}
+                      </p>
+                      <p className="text-gray-600">Role: {user.role}</p>
+                    </div>
+                    <div className="flex space-x-2">
                       <button
-                        type="submit"
-                        className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+                        type="button"
+                        onClick={() => openModal(user)}
+                        className="rounded bg-yellow-500 px-4 py-2 text-white hover:bg-yellow-600"
                       >
-                        Delete User
+                        Edit User
                       </button>
-                    </Form>
-                  </div>
-                </li>
-              ))}
+                      <Form method="post">
+                        <input type="hidden" name="userId" value={user.id} />
+                        <input type="hidden" name="actionType" value="delete" />
+                        <button
+                          type="submit"
+                          className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+                        >
+                          Delete User
+                        </button>
+                      </Form>
+                    </div>
+                  </li>
+                ))}
             </ul>
           </div>
         ) : null}
@@ -378,9 +381,7 @@ export default function AdminDashboard() {
                     </p>
                     <p className="text-gray-600">
                       Role:{" "}
-                      {shift.assignedTo
-                        ? `${shift.role}`
-                        : "Not Assigned"}
+                      {shift.assignedTo ? `${shift.role}` : "Not Assigned"}
                     </p>
                   </div>
                 </li>

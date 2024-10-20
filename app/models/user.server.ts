@@ -118,6 +118,7 @@ export async function getUsersByRestaurantId(restaurantId: number) {
       email: true,
       phoneNumber: true,
       role: true,
+      status: true,
       createdAt: true,
     },
   });
