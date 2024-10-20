@@ -77,6 +77,6 @@ export function validateEmail(email: unknown): email is string {
 
 export function validatePhoneNumber(phoneNumber: string): boolean {
   // A basic phone number validation (supports only digits and some common phone number formats)
-  const phoneNumberRegex = /^[0-9]{10}$/; // Accepts international numbers with "+" and between 10-15 digits
+  const phoneNumberRegex = /^(\+?\d{1,2}\s?)?(\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}$/;
   return phoneNumberRegex.test(phoneNumber);
 }

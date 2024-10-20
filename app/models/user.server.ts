@@ -8,7 +8,7 @@ export async function createUser(
   name: string,
   email: string,
   password: string,
-  phoneNumber: string | null,
+  phoneNumber: string,
   consentToText: boolean,
   restaurantId: number,
 ) {

@@ -20,18 +20,19 @@ export const loader: LoaderFunction = async ({ request }) => {
 };
 
 export const action: ActionFunction = async ({ request }) => {
-  const user = await requireUser(request);
-  const formData = await request.formData();
-  const date = new Date(formData.get("date") as string);
-  const startTime = new Date(`${formData.get("date")}T${formData.get("startTime")}:00`);
-  const endTime = new Date(`${formData.get("date")}T${formData.get("endTime")}:00`);
-
-  if (user) {
-    await createAvailability(user.id, date, startTime, endTime);
-  }
-
-  return redirect("/employee-dashboard");
-};
+    const user = await requireUser(request);
+    const formData = await request.formData();
+    const date = formData.get("date") as string;
+    const startTime = formData.get("startTime") as string;
+    const endTime = formData.get("endTime") as string;
+  
+    if (user) {
+      await createAvailability(user.id, date, startTime, endTime);
+    }
+  
+    return redirect("/employee-dashboard");
+  };  
+  
 
 export default function EmployeeDashboard() {
   const { shifts, user, availability } = useLoaderData<typeof loader>();

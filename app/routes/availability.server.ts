@@ -1,12 +1,19 @@
 import { prisma } from "../prisma.server";
 
-export async function createAvailability(userId: number, date: Date, startTime: Date, endTime: Date) {
+// app/models/availability.server.ts
+
+export async function createAvailability(
+  userId: number,
+  date: string,
+  startTime: string,
+  endTime: string,
+) {
   return prisma.availability.create({
     data: {
       userId,
-      day: date.toLocaleDateString('en-US', { weekday: 'long' }), // Convert date to day string, e.g., "Monday"
-      startTime: startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }), // Convert Date to time string
-      endTime: endTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }), // Convert Date to time string
+      day: new Date(date).toLocaleDateString("en-US", { weekday: "long" }), // Convert date to weekday name
+      startTime,
+      endTime,
     },
   });
 }
