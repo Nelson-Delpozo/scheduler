@@ -1,8 +1,6 @@
-// app/routes/admin-dashboard.tsx
-
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Link, useLoaderData, NavLink, Outlet, Form, useTransition, useLocation } from "@remix-run/react";
+import { useLoaderData, Form } from "@remix-run/react";
 import { useState } from "react";
 
 import Modal from '~/components/Modal';
@@ -18,65 +16,88 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const pendingUsers = await getUsersPendingApproval();
   const restaurantUsers = await getUsersByRestaurantId(user.restaurantId!);
+  
   const shifts = await getShiftsByRestaurant(user.restaurantId!);
-  return json({ pendingUsers, restaurantUsers, shifts });
+  return json({ pendingUsers, restaurantUsers, shifts, restaurantId: user.restaurantId });
 };
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const actionType = formData.get("actionType");
-  const userId = formData.get("userId");
-
-  if (typeof userId !== "string") {
-    return json({ success: false, error: "Invalid user ID" });
-  }
 
   switch (actionType) {
-    case "approve":
-      await approveUser(parseInt(userId));
-      break;
-    case "update": {
-      const name = formData.get("name") as string | null;
-      const role = formData.get("role") as string | null;
-      const phoneNumber = formData.get("phoneNumber") as string | null;
-
-      if (name && role) {
-        await updateUser(parseInt(userId), { name, role, phoneNumber: phoneNumber ?? undefined });
-      } else {
-        return json({ success: false, error: "Invalid user data" });
-      }
-      break;
-    }
-    case "delete":
-      await deleteUser(parseInt(userId));
-      break;
     case "create-shift": {
-      const date = new Date(formData.get("date") as string);
-      const startTime = new Date(formData.get("startTime") as string);
-      const endTime = new Date(formData.get("endTime") as string);
-      const assignedToId = formData.get("assignedToId") ? parseInt(formData.get("assignedToId") as string) : undefined;
+      const date = formData.get("date") as string;
+      const startTime = formData.get("startTime") as string;
+      const endTime = formData.get("endTime") as string;
+      const assignedToId = parseInt(formData.get("assignedToId") as string);
       const restaurantId = parseInt(formData.get("restaurantId") as string);
       const createdById = parseInt(formData.get("createdById") as string);
 
+      // Validate the form data
+      if (!date || !startTime || !endTime || isNaN(assignedToId) || isNaN(restaurantId) || isNaN(createdById)) {
+        return json({ success: false, error: "Missing or invalid data." }, { status: 400 });
+      }
+
       try {
-        await createShift(date, startTime, endTime, restaurantId, createdById, undefined, assignedToId);
-        return redirect("/admin-dashboard/shift-creation");
+        // Parse the date and time correctly
+        await createShift(
+          new Date(date),
+          new Date(`${date}T${startTime}:00`),
+          new Date(`${date}T${endTime}:00`),
+          restaurantId,
+          createdById,
+          undefined,
+          assignedToId
+        );
+        return redirect("/admin-dashboard");
       } catch (error) {
         return json({ error: (error as Error).message }, { status: 400 });
       }
     }
+    case "approve": {
+      const userId = formData.get("userId") as string;
+      if (userId) {
+        await approveUser(parseInt(userId));
+      } else {
+        return json({ success: false, error: "Invalid user ID." }, { status: 400 });
+      }
+      break;
+    }
+    case "update": {
+      const userId = formData.get("userId") as string;
+      const name = formData.get("name") as string | null;
+      const role = formData.get("role") as string | null;
+      const phoneNumber = formData.get("phoneNumber") as string | null;
+
+      if (userId && name && role) {
+        await updateUser(parseInt(userId), { name, role, phoneNumber: phoneNumber ?? undefined });
+      } else {
+        return json({ success: false, error: "Invalid user data." }, { status: 400 });
+      }
+      break;
+    }
+    case "delete": {
+      const userId = formData.get("userId") as string;
+      if (userId) {
+        await deleteUser(parseInt(userId));
+      } else {
+        return json({ success: false, error: "Invalid user ID." }, { status: 400 });
+      }
+      break;
+    }
     default:
-      return json({ success: false, error: "Invalid action type" });
+      return json({ success: false, error: "Invalid action type." }, { status: 400 });
   }
 
-  return json({ success: true });
+  return redirect("/admin-dashboard");
 };
 
 export default function AdminDashboard() {
-  const { pendingUsers, restaurantUsers, shifts } = useLoaderData<typeof loader>();
-  const location = useLocation();
+  const { pendingUsers, restaurantUsers, shifts, restaurantId } = useLoaderData<typeof loader>();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [modalUser, setModalUser] = useState<{ id: number; name: string; role: string; phoneNumber: string | null } | null>(null);
+  const [activeTab, setActiveTab] = useState("users");
 
   const openModal = (user: { id: number; name: string; role: string; phoneNumber: string | null }) => {
     setModalUser(user);
@@ -89,98 +110,86 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="flex min-h-full flex-col">
-      <div className="absolute top-4 left-4">
+    <div className="flex min-h-full flex-col items-center">
+      <div className="w-full flex justify-between items-center px-4 py-4 sm:px-8">
         <Form action="/logout" method="post">
           <button type="submit" className="btn-primary bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
             Logout
           </button>
         </Form>
       </div>
-      <div className="mx-auto w-full max-w-5xl p-8">
+      <div className="mx-auto w-full max-w-5xl px-4 sm:px-8 pt-4 pb-8">
         <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-        <div className="flex space-x-4 mb-8">
-          <NavLink
-            to="/admin-dashboard"
-            end
-            className={({ isActive }) =>
-              isActive
-                ? "border-b-2 border-blue-500 pb-2 text-blue-600"
-                : "pb-2 text-gray-600 hover:text-blue-500"
-            }
+        
+        <div className="flex mb-8">
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`px-4 py-2 text-sm font-medium rounded ${
+              activeTab === "users" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800 hover:bg-blue-500"
+            }`}
           >
-            User Approvals
-          </NavLink>
-          <NavLink
-            to="/admin-dashboard/scheduling"
-            className={({ isActive }) =>
-              isActive
-                ? "border-b-2 border-blue-500 pb-2 text-blue-600"
-                : "pb-2 text-gray-600 hover:text-blue-500"
-            }
+            Users
+          </button>
+          <button
+            onClick={() => setActiveTab("schedules")}
+            className={`px-4 py-2 text-sm font-medium rounded ${
+              activeTab === "schedules" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800 hover:bg-blue-500"
+            }`}
           >
-            Scheduling
-          </NavLink>
-          <NavLink
-            to="/admin-dashboard/shift-creation"
-            className={({ isActive }) =>
-              isActive
-                ? "border-b-2 border-blue-500 pb-2 text-blue-600"
-                : "pb-2 text-gray-600 hover:text-blue-500"
-            }
+            Schedules
+          </button>
+          <button
+            onClick={() => setActiveTab("shifts")}
+            className={`px-4 py-2 text-sm font-medium rounded ${
+              activeTab === "shifts" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800 hover:bg-blue-500"
+            }`}
           >
-            Shift Creation
-          </NavLink>
+            Shifts
+          </button>
         </div>
-        <Outlet />
-        {/* Only render User Approvals section on the User Approvals tab */}
-        {location.pathname === "/admin-dashboard" ? <div className="mt-8">
+
+        {activeTab === "users" ? <div className="mt-8">
+            <h2 className="text-xl mb-4">Users Awaiting Approval</h2>
             {pendingUsers.length > 0 ? (
-              <div>
-                <h2 className="text-xl mb-4">Pending User Approvals</h2>
-                <ul className="space-y-4">
-                  {pendingUsers.map((user) => (
-                    <li key={user.id} className="flex justify-between items-center p-4 border rounded-md">
-                      <div>
-                        <p className="font-semibold">{user.email}</p>
-                        <p className="text-gray-600">{user.phoneNumber || "No phone number provided"}</p>
-                        <p className="text-gray-600">{user.name || "No name provided"}</p>
-                      </div>
-                      <Form method="post">
-                        <input type="hidden" name="userId" value={user.id} />
-                        <input type="hidden" name="actionType" value="approve" />
-                        <button
-                          type="submit"
-                          className="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 focus:bg-green-400"
-                        >
-                          Approve User
-                        </button>
-                      </Form>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            {pendingUsers.length === 0 ? <p className="text-gray-700">No users are currently pending approval.</p> : null}
-          </div> : null}
-        {/* Only render Manage Users section on the User Approvals tab */}
-        {location.pathname === "/admin-dashboard" ? <div className="mt-8">
-            <h2 className="text-xl mb-4">Manage Users</h2>
+              <ul className="space-y-4">
+                {pendingUsers.map((user) => (
+                  <li key={user.id} className="flex justify-between items-center p-4 border rounded-md">
+                    <div>
+                      <p className="font-semibold">{user.email}</p>
+                      <p className="text-gray-600">{user.phoneNumber || "No phone number provided"}</p>
+                    </div>
+                    <Form method="post">
+                      <input type="hidden" name="userId" value={user.id} />
+                      <input type="hidden" name="actionType" value="approve" />
+                      <button
+                        type="submit"
+                        className="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+                      >
+                        Approve User
+                      </button>
+                    </Form>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-700">No users are currently pending approval.</p>
+            )}
+
+            <h2 className="text-xl mt-8 mb-4">Manage Users</h2>
             <ul className="space-y-4">
-              {restaurantUsers.map((user: { id: any; name: any; email?: any; phoneNumber: any; role: any; status?: any; }) => (
+              {restaurantUsers.map((user) => (
                 <li key={user.id} className="flex justify-between items-center p-4 border rounded-md">
                   <div>
                     <p className="font-semibold">{user.name}</p>
                     <p className="text-gray-600">{user.email}</p>
                     <p className="text-gray-600">{user.phoneNumber || "No phone number provided"}</p>
                     <p className="text-gray-600">Role: {user.role}</p>
-                    <p className="text-gray-600">Status: {user.status}</p>
                   </div>
                   <div className="flex space-x-2">
                     <button
                       type="button"
                       onClick={() => openModal(user)}
-                      className="rounded bg-yellow-500 px-4 py-2 text-white hover:bg-yellow-600 focus:bg-yellow-400"
+                      className="rounded bg-yellow-500 px-4 py-2 text-white hover:bg-yellow-600"
                     >
                       Edit User
                     </button>
@@ -189,7 +198,7 @@ export default function AdminDashboard() {
                       <input type="hidden" name="actionType" value="delete" />
                       <button
                         type="submit"
-                        className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600 focus:bg-red-400"
+                        className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
                       >
                         Delete User
                       </button>
@@ -199,72 +208,96 @@ export default function AdminDashboard() {
               ))}
             </ul>
           </div> : null}
-        {/* Only render Manage Shifts section on the Shift Creation tab */}
-        {location.pathname === "/admin-dashboard/shift-creation" ? <div className="mt-8">
-            <h2 className="text-xl mb-4">Manage Shifts</h2>
+
+        {activeTab === "schedules" ? <div className="mt-8">
+            <h2 className="text-xl mb-4">Schedules</h2>
+            <p className="text-gray-700">Schedules functionality coming soon.</p>
+          </div> : null}
+
+        {activeTab === "shifts" ? <div className="mt-8">
+            <h2 className="text-xl mb-4">Create and Manage Shifts</h2>
+            <Form method="post" className="mb-4">
+              <input type="hidden" name="actionType" value="create-shift" />
+              <input type="hidden" name="restaurantId" value={restaurantId || ''} />
+              <input type="hidden" name="createdById" value={restaurantUsers[0]?.id || ''} />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <input type="date" name="date" required className="border rounded p-2" />
+                <input type="time" name="startTime" required className="border rounded p-2" />
+                <input type="time" name="endTime" required className="border rounded p-2" />
+                <select name="assignedToId" className="border rounded p-2" required>
+                  <option value="">Select Employee</option>
+                  {restaurantUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.id} - {user.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                className="mt-4 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+              >
+                Create Shift
+              </button>
+            </Form>
             <ul className="space-y-4">
-              {shifts.map((shift: { id: number; date: string; startTime: string; endTime: string; assignedToId: number | null; }) => (
+              {shifts.map((shift) => (
                 <li key={shift.id} className="flex justify-between items-center p-4 border rounded-md">
                   <div>
                     <p className="font-semibold">Shift Date: {new Date(shift.date).toLocaleDateString()}</p>
                     <p className="text-gray-600">Start Time: {new Date(shift.startTime).toLocaleTimeString()}</p>
                     <p className="text-gray-600">End Time: {new Date(shift.endTime).toLocaleTimeString()}</p>
-                    <p className="text-gray-600">Assigned To: {shift.assignedToId ?? "Not Assigned"}</p>
+                    <p className="text-gray-600">Assigned To: {shift.assignedTo ? `${shift.assignedTo.id} - ${shift.assignedTo.name}` : "Not Assigned"}</p>
                   </div>
                 </li>
               ))}
             </ul>
           </div> : null}
       </div>
+
       {modalUser ? <Modal isOpen={isModalOpen} onClose={closeModal}>
           <h2 className="text-xl font-bold mb-4">Edit User</h2>
           <Form method="post">
             <input type="hidden" name="userId" value={modalUser.id} />
             <input type="hidden" name="actionType" value="update" />
             <div className="mb-4">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Name
-              </label>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
               <input
                 type="text"
                 name="name"
                 defaultValue={modalUser.name}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
               />
             </div>
             <div className="mb-4">
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Role
-              </label>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
               <input
                 type="text"
                 name="role"
                 defaultValue={modalUser.role}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
               />
             </div>
             <div className="mb-4">
-              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
-                Phone Number
-              </label>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
               <input
                 type="text"
                 name="phoneNumber"
                 defaultValue={modalUser.phoneNumber ?? ""}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
               />
             </div>
             <div className="flex space-x-2">
               <button
                 type="submit"
-                className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
+                className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
               >
                 Save
               </button>
               <button
                 type="button"
                 onClick={closeModal}
-                className="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600 focus:bg-gray-400"
+                className="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
               >
                 Cancel
               </button>

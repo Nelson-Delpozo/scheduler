@@ -84,13 +84,16 @@ export async function approveUser(userId: number) {
 export async function getUsersByRestaurantId(restaurantId: number) {
   return prisma.user.findMany({
     where: { restaurantId },
+    orderBy: {
+      createdAt: 'desc', // Sort by created date in descending order
+    },
     select: {
       id: true,
-      email: true,
       name: true,
-      role: true,
-      status: true,
+      email: true,
       phoneNumber: true,
+      role: true,
+      createdAt: true,
     },
   });
 }

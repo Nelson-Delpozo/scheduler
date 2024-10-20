@@ -38,7 +38,10 @@ export async function getShiftsByRestaurant(restaurantId: number) {
     where: { restaurantId },
     include: {
       assignedTo: {
-        select: { id: true, name: true },
+        select: {
+          id: true,
+          name: true,
+        },
       },
     },
   });
