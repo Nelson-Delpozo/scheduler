@@ -1,29 +1,32 @@
-import { useNavigate, useFetcher } from "@remix-run/react";
+import { useFetcher } from "@remix-run/react";
 import { useEffect } from "react";
 
 const DisableBackForward = () => {
   const fetcher = useFetcher();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    // Listener for popstate event
-    const handlePopState = (event: PopStateEvent) => {
-      event.preventDefault();
-      // Perform a logout when the user hits the back button
-      fetcher.submit(null, { method: "post", action: "/logout" });
-    };
-
-    // Push a new state to ensure the initial load has a history entry
+    // Push the current state into the history stack and replace it
     window.history.pushState(null, "", window.location.href);
 
-    // Add event listener for popstate
+    const handlePopState = () => {
+      // Check if the user is logged in (you can modify this check as needed based on your logic)
+      if (window.location.pathname !== "/login") {
+        // Force the user to log out if they try to navigate back
+        fetcher.submit(null, { method: "post", action: "/logout" });
+      } else {
+        // If they are on the login page, prevent navigation
+        window.history.pushState(null, "", window.location.href);
+      }
+    };
+
+    // Listen for back/forward actions
     window.addEventListener("popstate", handlePopState);
 
-    // Cleanup function to remove the event listener on unmount
+    // Cleanup the event listener when component unmounts
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [fetcher, navigate]);
+  }, [fetcher]);
 
   return null;
 };
