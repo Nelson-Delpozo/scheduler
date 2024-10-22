@@ -84,8 +84,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   // Redirect based on user role (e.g., manager or employee)
-  // const redirectPath = user.role === "manager" ? "/admin-dashboard" : "/employee-dashboard";
-  // Redirect based on user role
   let redirectPath = "/employee-dashboard";
   if (user.role === "admin") {
     redirectPath = "/admin-dashboard";
@@ -124,7 +122,6 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-full flex-col justify-center">
       <div className="mx-auto w-full max-w-md px-8">
-        {/* Display general error message if login fails */}
         {actionData?.errors?.general ? (
           <div className="mb-4 rounded bg-red-100 p-4 text-red-700">
             {actionData.errors.general}
@@ -143,7 +140,6 @@ export default function LoginPage() {
                 ref={emailRef}
                 id="email"
                 required
-                // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus={true}
                 name="email"
                 type="email"
@@ -222,6 +218,14 @@ export default function LoginPage() {
             </div>
           </div>
         </Form>
+        <div className="mt-6 text-center">
+          <Link
+            to="/register-restaurant"
+            className="inline-block w-full rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
+          >
+            Register a Restaurant
+          </Link>
+        </div>
       </div>
     </div>
   );
