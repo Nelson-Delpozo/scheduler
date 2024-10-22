@@ -1,6 +1,7 @@
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { useLoaderData, Form } from "@remix-run/react";
+import { useFetcher } from "@remix-run/react";
 import { useState } from "react";
 
 import Modal from "~/components/Modal";
@@ -180,6 +181,8 @@ export default function AdminDashboard() {
     setIsModalOpen(false);
     setModalUser(null);
   };
+
+  const fetcher = useFetcher();
 
   return (
     <div className="flex min-h-full flex-col items-center">
@@ -416,7 +419,7 @@ export default function AdminDashboard() {
         <Modal isOpen={isModalOpen} onClose={closeModal}>
           <div className="mx-auto w-full max-w-md rounded-md bg-white p-6 shadow-lg sm:max-w-lg md:max-w-2xl">
             <h2 className="mb-4 text-xl font-bold">Edit User</h2>
-            <Form method="post">
+            <fetcher.Form method="post">
               <input type="hidden" name="userId" value={modalUser.id} />
               <input type="hidden" name="actionType" value="update" />
               <div className="mb-4">
@@ -476,7 +479,7 @@ export default function AdminDashboard() {
                   Cancel
                 </button>
               </div>
-            </Form>
+            </fetcher.Form>
           </div>
         </Modal>
       ) : null}
