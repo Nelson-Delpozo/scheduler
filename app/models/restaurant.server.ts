@@ -30,6 +30,9 @@ export async function getAllRestaurants() {
       users: true,
       schedules: true,
     },
+    orderBy: {
+      updatedAt: 'desc',
+    }
   });
 }
 
@@ -50,15 +53,17 @@ export async function getPendingRestaurants() {
       where: {
         status: "pending",
       },
-    });
-  }
+      orderBy: {
+     createdAt: 'asc',
+    }
+  });
+}
   
-  // Function to approve a restaurant
-  export async function approveRestaurant(id: number) {
-    return prisma.restaurant.update({
-      where: { id },
-      data: {
-        status: "approved",
-      },
-    });
-  }
+ // Example implementation in restaurant.server.ts
+export async function approveRestaurant(id: number) {
+  // Make sure this function properly updates the status of the restaurant
+  return await prisma.restaurant.update({
+    where: { id },
+    data: { status: "approved" },
+  });
+}
