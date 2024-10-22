@@ -218,7 +218,7 @@ export default function LoginPage() {
             </div>
           </div>
         </Form>
-        <div className="mt-6 text-center">
+        <div className="mt-10 text-center">
           <Link
             to="/register-restaurant"
             className="inline-block w-full rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
