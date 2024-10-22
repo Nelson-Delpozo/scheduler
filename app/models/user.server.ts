@@ -93,6 +93,24 @@ export async function getUsersPendingApproval() {
   });
 }
 
+// Function to get users pending approval by restaurant ID
+export async function getUsersPendingApprovalByRestaurantId(restaurantId: number) {
+  return prisma.user.findMany({
+    where: {
+      status: "pending",
+      restaurantId: restaurantId, // Filter by the restaurant ID
+    },
+    select: {
+      id: true,
+      email: true,
+      phoneNumber: true,
+      name: true,
+    },
+  });
+}
+
+
+
 // Function to approve a user
 export async function approveUser(userId: number) {
   return prisma.user.update({
@@ -120,6 +138,25 @@ export async function getUsersByRestaurantId(restaurantId: number) {
       role: true,
       status: true,
       createdAt: true,
+    },
+  });
+}
+
+// Function to get users by restaurant ID
+export async function getAllUsers() {
+  return prisma.user.findMany({
+    orderBy: {
+      createdAt: 'desc', // Sort by created date in descending order
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phoneNumber: true,
+      role: true,
+      status: true,
+      createdAt: true,
+      restaurantId: true
     },
   });
 }

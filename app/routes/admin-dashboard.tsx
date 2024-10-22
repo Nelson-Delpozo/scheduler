@@ -6,11 +6,11 @@ import { useState } from "react";
 import Modal from "~/components/Modal";
 import { createShift, getShiftsByRestaurant } from "~/models/shift.server";
 import {
-  getUsersPendingApproval,
   approveUser,
   getUsersByRestaurantId,
   updateUser,
   deleteUser,
+  getUsersPendingApprovalByRestaurantId,
 } from "~/models/user.server";
 import { requireAdmin } from "~/session.server";
 
@@ -20,17 +20,28 @@ export const loader: LoaderFunction = async ({ request }) => {
     return redirect("/login");
   }
 
-  const pendingUsers = await getUsersPendingApproval();
-  const restaurantUsers = await getUsersByRestaurantId(user.restaurantId!);
+  if (user.restaurantId) {
+    const pendingUsers = await getUsersPendingApprovalByRestaurantId(user.restaurantId);
+    const restaurantUsers = await getUsersByRestaurantId(user.restaurantId);
+    const shifts = await getShiftsByRestaurant(user.restaurantId);
 
-  const shifts = await getShiftsByRestaurant(user.restaurantId!);
-  return json({
-    pendingUsers,
-    restaurantUsers,
-    shifts,
-    restaurantId: user.restaurantId,
-  });
+    return json({
+      pendingUsers,
+      restaurantUsers,
+      shifts,
+      restaurantId: user.restaurantId,
+    });
+  } else {
+    // Handle the case when restaurantId is null
+    return json({
+      pendingUsers: [],
+      restaurantUsers: [],
+      shifts: [],
+      restaurantId: null,
+    });
+  }
 };
+
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();

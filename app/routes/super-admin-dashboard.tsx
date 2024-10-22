@@ -15,6 +15,7 @@ import {
   updateRestaurant,
   deleteRestaurant,
 } from "~/models/restaurant.server";
+import { getAllUsers } from "~/models/user.server";
 import { requireSuperAdmin } from "~/session.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -26,7 +27,9 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const restaurants = await getAllRestaurants();
   const pendingRestaurants = await getPendingRestaurants();
-  return json({ restaurants, pendingRestaurants });
+  const users = await getAllUsers(); // Fetch all users here
+
+  return json({ restaurants, pendingRestaurants, users });
 };
 
 export const action: ActionFunction = async ({ request }) => {
