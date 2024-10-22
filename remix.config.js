@@ -1,3 +1,5 @@
+/* global process */
+
 /** @type {import('@remix-run/dev').AppConfig} */
 module.exports = {
   // Specifies the build target as Vercel
