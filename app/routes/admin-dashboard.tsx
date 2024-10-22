@@ -419,7 +419,16 @@ export default function AdminDashboard() {
         <Modal isOpen={isModalOpen} onClose={closeModal}>
           <div className="mx-auto w-full max-w-md rounded-md bg-white p-6 shadow-lg sm:max-w-lg md:max-w-2xl">
             <h2 className="mb-4 text-xl font-bold">Edit User</h2>
-            <fetcher.Form method="post">
+            <fetcher.Form
+        method="post"
+        action="/admin-dashboard"
+        onSubmit={() => {
+          // Use a small delay to allow Remix to handle the form submission before closing
+          setTimeout(() => {
+            closeModal();
+          }, 0);
+        }}
+      >
               <input type="hidden" name="userId" value={modalUser.id} />
               <input type="hidden" name="actionType" value="update" />
               <div className="mb-4">
