@@ -4,12 +4,11 @@
 module.exports = {
   // Specifies the build target as Vercel
   serverBuildTarget: 'vercel',
-  
+
   // Adjust the server file used in production
-  server: process.env.NODE_ENV === "development" ? undefined : "./server.js",
+  server: process.env.NODE_ENV === "development" ? undefined : undefined, // Remove custom server file
 
-  // Add any additional configuration options your app requires
+  // Additional configuration options
   ignoredRouteFiles: ["**/.*", "**/*.test.{ts,tsx}"],
-
   cacheDirectory: "./node_modules/.cache/remix",
 };
