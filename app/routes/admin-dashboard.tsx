@@ -225,7 +225,7 @@ export default function AdminDashboard() {
                 {pendingUsers.map((user) => (
                   <li
                     key={user.id}
-                    className="flex items-center justify-between rounded-md border p-4"
+                    className="flex flex-col items-center justify-between space-y-2 rounded-md border p-4 sm:flex-row sm:space-y-0"
                   >
                     <div>
                       <p className="font-semibold">{user.name}</p>
@@ -234,12 +234,15 @@ export default function AdminDashboard() {
                         {user.phoneNumber || "No phone number provided"}
                       </p>
                     </div>
-                    <Form method="post">
+                    <Form
+                      method="post"
+                      className="mt-4 flex w-full sm:mt-0 sm:w-auto"
+                    >
                       <input type="hidden" name="userId" value={user.id} />
                       <input type="hidden" name="actionType" value="approve" />
                       <button
                         type="submit"
-                        className="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+                        className="w-full rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 sm:w-auto"
                       >
                         Approve User
                       </button>

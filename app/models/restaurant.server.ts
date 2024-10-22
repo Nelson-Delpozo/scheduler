@@ -65,5 +65,6 @@ export async function approveRestaurant(id: number) {
   return await prisma.restaurant.update({
     where: { id },
     data: { status: "approved" },
+    
   });
 }
