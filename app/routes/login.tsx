@@ -121,7 +121,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-full flex-col justify-center">
-      <div className="mx-auto w-full max-w-md px-8">
+      <div className="mx-auto w-full max-w-md px-8 mb-5">
         {actionData?.errors?.general ? (
           <div className="mb-4 rounded bg-red-100 p-4 text-red-700">
             {actionData.errors.general}
