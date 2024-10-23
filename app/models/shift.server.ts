@@ -1,27 +1,30 @@
 // app/models/shift.server.ts
 import { prisma } from "../prisma.server";
 
-// Function to create a new shift
 export async function createShift(
   date: Date,
   startTime: Date,
   endTime: Date,
+  role: string, // Make this required
   restaurantId: number,
   createdById: number,
   scheduleId?: number,
   assignedToId?: number,
-  role?: string, // New parameter for shift role
 ) {
+  if (!role) {
+    throw new Error("Role is required when creating a shift.");
+  }
+
   return prisma.shift.create({
     data: {
       date,
       startTime,
       endTime,
+      role,
       restaurantId,
       createdById,
       scheduleId,
-      assignedToId,
-      role
+      ...(assignedToId && { assignedToId }), // Conditionally include this field
     },
   });
 }
@@ -37,7 +40,7 @@ export async function getShiftsForEmployee(employeeId: number) {
       role: true, // Ensure the role field is selected
     },
     orderBy: {
-      date: 'desc',
+      date: "desc",
     },
   });
 }
@@ -56,11 +59,10 @@ export async function getShiftsByRestaurant(restaurantId: number) {
       },
     },
     orderBy: {
-      date: 'desc',
+      date: "desc",
     },
   });
 }
-
 
 // Function to get shift by ID
 export async function getShiftById(id: number) {

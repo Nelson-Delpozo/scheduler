@@ -53,7 +53,7 @@ model Shift {
   restaurantId Int
   createdBy   User     @relation("CreatedByUser", fields: [createdById], references: [id])
   createdById Int
-  role        String?   // New field for shift role
+  role        String   // Make this required
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }

@@ -15,6 +15,17 @@ import {
 } from "~/models/user.server";
 import { requireAdmin } from "~/session.server";
 
+interface Shift {
+  id: number;
+  date: string;
+  startTime: string;
+  endTime: string;
+  role: string | null;
+  assignedTo: {
+    name: string;
+  } | null;
+}
+
 export const loader: LoaderFunction = async ({ request }) => {
   const user = await requireAdmin(request);
   if (!user) {
@@ -22,7 +33,9 @@ export const loader: LoaderFunction = async ({ request }) => {
   }
 
   if (user.restaurantId) {
-    const pendingUsers = await getUsersPendingApprovalByRestaurantId(user.restaurantId);
+    const pendingUsers = await getUsersPendingApprovalByRestaurantId(
+      user.restaurantId,
+    );
     const restaurantUsers = await getUsersByRestaurantId(user.restaurantId);
     const shifts = await getShiftsByRestaurant(user.restaurantId);
 
@@ -43,7 +56,6 @@ export const loader: LoaderFunction = async ({ request }) => {
   }
 };
 
-
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const actionType = formData.get("actionType");
@@ -59,7 +71,7 @@ export const action: ActionFunction = async ({ request }) => {
         : undefined;
       const restaurantId = parseInt(formData.get("restaurantId") as string);
       const createdById = parseInt(formData.get("createdById") as string);
-      const role = formData.get("role") as string;
+      const role = String(formData.get("role"));
 
       // // Parse assignedToId if it exists, otherwise set it to null
       // const assignedToId = assignedToIdValue
@@ -89,11 +101,11 @@ export const action: ActionFunction = async ({ request }) => {
           new Date(date),
           new Date(`${date}T${startTime}:00`),
           new Date(`${date}T${endTime}:00`),
+          role,
           restaurantId,
           createdById,
           undefined,
           assignedToId, // Will be null if not provided
-          role,
         );
         return redirect("/admin-dashboard");
       } catch (error) {
@@ -381,35 +393,27 @@ export default function AdminDashboard() {
               </button>
             </Form>
             <ul className="space-y-4">
-              {shifts.map((shift) => (
-                <li
-                  key={shift.id}
-                  className="flex items-center justify-between rounded-md border p-4"
-                >
-                  <div>
+              <ul className="space-y-4">
+                {shifts.map((shift: Shift) => (
+                  <li key={shift.id} className="rounded-md border p-4">
                     <p className="font-semibold">
-                      Shift Date: {new Date(shift.date).toLocaleDateString()}
+                      Date: {new Date(shift.date).toLocaleDateString()}
                     </p>
-                    <p className="text-gray-600">
+                    <p>
                       Start Time:{" "}
                       {new Date(shift.startTime).toLocaleTimeString()}
                     </p>
-                    <p className="text-gray-600">
+                    <p>
                       End Time: {new Date(shift.endTime).toLocaleTimeString()}
                     </p>
-                    <p className="text-gray-600">
+                    <p>Role: {shift.role || "Unassigned"}</p>
+                    <p>
                       Assigned To:{" "}
-                      {shift.assignedTo
-                        ? `${shift.assignedTo.id} - ${shift.assignedTo.name}`
-                        : "Not Assigned"}
+                      {shift.assignedTo ? shift.assignedTo.name : "Unassigned"}
                     </p>
-                    <p className="text-gray-600">
-                      Role:{" "}
-                      {shift.assignedTo ? `${shift.role}` : "Not Assigned"}
-                    </p>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                ))}
+              </ul>
             </ul>
           </div>
         ) : null}
@@ -420,15 +424,15 @@ export default function AdminDashboard() {
           <div className="mx-auto w-full max-w-md rounded-md bg-white p-6 shadow-lg sm:max-w-lg md:max-w-2xl">
             <h2 className="mb-4 text-xl font-bold">Edit User</h2>
             <fetcher.Form
-        method="post"
-        action="/admin-dashboard"
-        onSubmit={() => {
-          // Use a small delay to allow Remix to handle the form submission before closing
-          setTimeout(() => {
-            closeModal();
-          }, 0);
-        }}
-      >
+              method="post"
+              action="/admin-dashboard"
+              onSubmit={() => {
+                // Use a small delay to allow Remix to handle the form submission before closing
+                setTimeout(() => {
+                  closeModal();
+                }, 0);
+              }}
+            >
               <input type="hidden" name="userId" value={modalUser.id} />
               <input type="hidden" name="actionType" value="update" />
               <div className="mb-4">
