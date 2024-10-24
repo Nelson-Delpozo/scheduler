@@ -391,14 +391,14 @@ export default function AdminDashboard() {
                 {shifts.map((shift: Shift) => (
                   <li key={shift.id} className="rounded-md border p-4">
                     <p className="font-semibold">
-                      Date: {new Date(shift.date).toLocaleDateString()}
+                      Date: {new Date(shift.date).toLocaleDateString(undefined)}
                     </p>
                     <p>
                       Start Time:{" "}
-                      {new Date(shift.startTime).toLocaleTimeString()}
+                      {new Date(shift.startTime).toLocaleTimeString(undefined)}
                     </p>
                     <p>
-                      End Time: {new Date(shift.endTime).toLocaleTimeString()}
+                      End Time: {new Date(shift.endTime).toLocaleTimeString(undefined)}
                     </p>
                     <p>Role: {shift.role || "Unassigned"}</p>
                     <p>

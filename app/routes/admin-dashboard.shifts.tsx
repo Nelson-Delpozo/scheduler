@@ -16,7 +16,6 @@ interface Shift {
   } | null;
 }
 
-
 export const loader: LoaderFunction = async ({ request }) => {
   const user = await requireAdmin(request);
   if (!user) {
@@ -33,25 +32,33 @@ export const loader: LoaderFunction = async ({ request }) => {
   }
 };
 
-
 export default function AdminDashboardShifts() {
   const { shifts } = useLoaderData<typeof loader>();
 
   return (
     <div className="mt-8">
-      <h2 className="text-xl font-semibold mb-4">Current Shifts</h2>
+      <h2 className="mb-4 text-xl font-semibold">Current Shifts</h2>
       <ul className="space-y-4">
         {shifts.map((shift: Shift) => (
-          <li key={shift.id} className="p-4 border rounded-md">
-            <p className="font-semibold">Date: {new Date(shift.date).toLocaleDateString()}</p>
-            <p>Start Time: {new Date(shift.startTime).toLocaleTimeString()}</p>
-            <p>End Time: {new Date(shift.endTime).toLocaleTimeString()}</p>
+          <li key={shift.id} className="rounded-md border p-4">
+            <p className="font-semibold">
+              Date: {new Date(shift.date).toLocaleDateString(undefined)}
+            </p>
+            <p className="text-gray-600">
+              Start Time:{" "}
+              {new Date(shift.startTime).toLocaleTimeString(undefined)}
+            </p>
+            <p className="text-gray-600">
+              End Time: {new Date(shift.endTime).toLocaleTimeString(undefined)}
+            </p>
             <p>Role: {shift.role || "Unassigned"}</p>
-            <p>Assigned To: {shift.assignedTo ? shift.assignedTo.name : "Unassigned"}</p>
+            <p>
+              Assigned To:{" "}
+              {shift.assignedTo ? shift.assignedTo.name : "Unassigned"}
+            </p>
           </li>
         ))}
       </ul>
     </div>
   );
 }
-
