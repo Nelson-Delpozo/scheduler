@@ -39,9 +39,9 @@ export default function App() {
       <body className="h-full flex flex-col">
         <header className="bg-gray-800 text-white">
           <nav className="container mx-auto flex justify-between items-center p-4">
-            <Link to="/" className="text-xl font-bold">
+            <h2 className="text-xl font-bold">
               Restaurant Scheduler
-            </Link>
+            </h2>
           </nav>
         </header>
         <main className="container mx-auto flex-grow p-4">
