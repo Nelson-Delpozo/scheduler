@@ -8,8 +8,8 @@ export async function createAvailability(
   startTime: string,
   endTime: string,
 ) {
-  // Create a complete DateTime by appending a time to the date
-  const formattedDate = new Date(`${date}T00:00:00Z`).toISOString(); // Adds a time component to the date
+  // Create a complete DateTime without setting it to UTC
+  const formattedDate = new Date(`${date}T00:00:00`).toISOString(); // Without 'Z', it will use the local timezone
 
   // Create full DateTime strings for startTime and endTime using the date
   const startDateTime = new Date(`${date}T${startTime}`).toISOString();
@@ -18,12 +18,13 @@ export async function createAvailability(
   return prisma.availability.create({
     data: {
       userId,
-      date: formattedDate, // A full ISO DateTime with a default time of 00:00:00
+      date: formattedDate, // Uses the local timezone
       startTime: startDateTime,
       endTime: endDateTime,
     },
   });
 }
+
 
 export async function getAvailabilityForUser(userId: number) {
   return prisma.availability.findMany({
