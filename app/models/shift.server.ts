@@ -77,26 +77,16 @@ export async function getShiftById(id: number) {
 }
 
 // Function to update a shift
-export async function updateShift(
-  id: number,
-  data: Partial<{
-    date: Date;
-    startTime: Date;
-    endTime: Date;
-    assignedToId: number;
-  }>,
-) {
+export async function updateShift(shiftId: number, updateData: { role?: string; date?: string; startTime?: string; endTime?: string; assignedToId?: number | null; }) {
   return prisma.shift.update({
-    where: { id },
-    data,
+    where: { id: shiftId },
+    data: updateData,
   });
 }
 
 // Function to delete a shift
-export async function deleteShift(id: number) {
+export async function deleteShift(shiftId: number) {
   return prisma.shift.delete({
-    where: { id },
+    where: { id: shiftId },
   });
 }
-
-// export { createShift, getShiftsByRestaurant, getShiftById, updateShift, deleteShift };

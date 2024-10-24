@@ -72,13 +72,7 @@ export const action: ActionFunction = async ({ request }) => {
       const restaurantId = parseInt(formData.get("restaurantId") as string);
       const createdById = parseInt(formData.get("createdById") as string);
       const role = String(formData.get("role"));
-
-      // // Parse assignedToId if it exists, otherwise set it to null
-      // const assignedToId = assignedToIdValue
-      //   ? parseInt(assignedToIdValue as string)
-      //   : null;
-
-      // Validate the form data
+      
       if (
         !date ||
         !startTime ||
