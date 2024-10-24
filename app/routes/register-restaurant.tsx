@@ -1,11 +1,15 @@
-import { LoaderFunction, ActionFunction, json, redirect } from "@remix-run/node";
-import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import {
+  LoaderFunction,
+  ActionFunction,
+  json,
+  redirect,
+} from "@remix-run/node";
+import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import { useRef, useEffect } from "react";
 
 import { createRestaurant } from "~/models/restaurant.server";
 import { createAdminUser } from "~/models/user.server";
 import { validatePhoneNumber, validateEmail } from "~/utils";
-
 
 export const loader: LoaderFunction = async () => {
   // Just return an empty object, allowing the form to render
@@ -262,6 +266,16 @@ export default function RegisterRestaurant() {
             Register Restaurant
           </button>
         </Form>
+      </div>
+      <div className="text-center text-sm text-gray-500 mt-5">
+        <Link
+          className="text-blue-500 underline"
+          to={{
+            pathname: "/login",
+          }}
+        >
+          Back to Login
+        </Link>
       </div>
     </div>
   );
