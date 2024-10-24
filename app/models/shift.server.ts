@@ -40,7 +40,7 @@ export async function getShiftsForEmployee(employeeId: number) {
       role: true, // Ensure the role field is selected
     },
     orderBy: {
-      date: "desc",
+      date: "asc",
     },
   });
 }
@@ -59,7 +59,7 @@ export async function getShiftsByRestaurant(restaurantId: number) {
       },
     },
     orderBy: {
-      date: "desc",
+      date: "asc",
     },
   });
 }
@@ -77,7 +77,16 @@ export async function getShiftById(id: number) {
 }
 
 // Function to update a shift
-export async function updateShift(shiftId: number, updateData: { role?: string; date?: string; startTime?: string; endTime?: string; assignedToId?: number | null; }) {
+export async function updateShift(
+  shiftId: number,
+  updateData: {
+    role?: string;
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    assignedToId?: number | null;
+  },
+) {
   return prisma.shift.update({
     where: { id: shiftId },
     data: updateData,

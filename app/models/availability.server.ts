@@ -25,12 +25,14 @@ export async function createAvailability(
   });
 }
 
-
 //get availability
 export async function getAvailabilityForUser(userId: number) {
   return prisma.availability.findMany({
     where: {
       userId: userId,
+    },
+    orderBy: {
+      date: "asc",
     },
   });
 }

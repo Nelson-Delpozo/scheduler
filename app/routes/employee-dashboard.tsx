@@ -1,6 +1,6 @@
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Link, useLoaderData, Form, useActionData } from "@remix-run/react";
+import { useLoaderData, Form } from "@remix-run/react";
 import { useState } from "react";
 
 import { getShiftsForEmployee } from "~/models/shift.server";
@@ -113,22 +113,26 @@ export default function EmployeeDashboard() {
                         <div>
                           <p className="font-semibold">
                             Shift Date:{" "}
-                            {new Date(shift.date).toLocaleDateString()}
+                            {new Date(shift.date).toLocaleDateString("en-US")}
                           </p>
                           <p className="text-gray-600">
                             Start Time:{" "}
-                            {new Date(shift.startTime).toLocaleTimeString()}
+                            {new Date(shift.startTime).toLocaleTimeString(
+                              "en-US",
+                            )}
                           </p>
                           <p className="text-gray-600">
                             End Time:{" "}
-                            {new Date(shift.endTime).toLocaleTimeString()}
+                            {new Date(shift.endTime).toLocaleTimeString(
+                              "en-US",
+                            )}
                           </p>
                           <p className="text-gray-600">
                             Role: {shift.role || "Not Specified"}
                           </p>
                           <p className="font-semibold">
                             Shift Date:{" "}
-                            {new Date(shift.date).toLocaleDateString()}
+                            {new Date(shift.date).toLocaleDateString("en-US")}
                           </p>
                         </div>
                       </li>
@@ -215,18 +219,18 @@ export default function EmployeeDashboard() {
                         <div>
                           <p className="font-semibold">
                             Date:{" "}
-                            {new Date(avail.date).toLocaleDateString(undefined)}
+                            {new Date(avail.date).toLocaleDateString("en-US")}
                           </p>
                           <p className="text-gray-600">
                             Start Time:{" "}
                             {new Date(avail.startTime).toLocaleTimeString(
-                              undefined,
+                              "en-US",
                             )}
                           </p>
                           <p className="text-gray-600">
                             End Time:{" "}
                             {new Date(avail.endTime).toLocaleTimeString(
-                              undefined,
+                              "en-US",
                             )}
                           </p>
                         </div>
@@ -253,4 +257,3 @@ export default function EmployeeDashboard() {
     </div>
   );
 }
-//dates issue?

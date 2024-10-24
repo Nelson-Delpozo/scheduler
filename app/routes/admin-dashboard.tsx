@@ -1,7 +1,6 @@
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { useLoaderData, Form } from "@remix-run/react";
-import { useFetcher } from "@remix-run/react";
+import { useLoaderData, Form, useFetcher } from "@remix-run/react";
 import { useState } from "react";
 
 import Modal from "~/components/Modal";
@@ -72,7 +71,7 @@ export const action: ActionFunction = async ({ request }) => {
       const restaurantId = parseInt(formData.get("restaurantId") as string);
       const createdById = parseInt(formData.get("createdById") as string);
       const role = String(formData.get("role"));
-      
+
       if (
         !date ||
         !startTime ||
@@ -388,25 +387,54 @@ export default function AdminDashboard() {
             </Form>
             <ul className="space-y-4">
               <ul className="space-y-4">
-                {shifts.map((shift: Shift) => (
-                  <li key={shift.id} className="rounded-md border p-4">
-                    <p className="font-semibold">
-                      Date: {new Date(shift.date).toLocaleDateString(undefined)}
-                    </p>
-                    <p>
-                      Start Time:{" "}
-                      {new Date(shift.startTime).toLocaleTimeString(undefined)}
-                    </p>
-                    <p>
-                      End Time: {new Date(shift.endTime).toLocaleTimeString(undefined)}
-                    </p>
-                    <p>Role: {shift.role || "Unassigned"}</p>
-                    <p>
-                      Assigned To:{" "}
-                      {shift.assignedTo ? shift.assignedTo.name : "Unassigned"}
-                    </p>
-                  </li>
-                ))}
+                {shifts.map((shift: Shift) => {
+                  // Parse the shift date string as a UTC date
+                  const shiftDate = new Date(shift.date);
+
+                  // Extract the year, month, and day in UTC to prevent local timezone adjustments
+                  const formattedDate = shiftDate.toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    timeZone: "UTC",
+                  });
+
+                  // Format the start and end times in the user's local time zone
+                  const formattedStartTime = new Date(
+                    shift.startTime,
+                  ).toLocaleTimeString(undefined, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  });
+
+                  const formattedEndTime = new Date(
+                    shift.endTime,
+                  ).toLocaleTimeString(undefined, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  });
+
+                  return (
+                    <li key={shift.id} className="rounded-md border p-4">
+                      <p className="font-semibold">Date: {formattedDate}</p>
+                      <p className="text-gray-600">
+                        Start Time: {formattedStartTime}
+                      </p>
+                      <p className="text-gray-600">
+                        End Time: {formattedEndTime}
+                      </p>
+                      <p>Role: {shift.role || "Unassigned"}</p>
+                      <p>
+                        Assigned To:{" "}
+                        {shift.assignedTo
+                          ? shift.assignedTo.name
+                          : "Unassigned"}
+                      </p>
+                    </li>
+                  );
+                })}
               </ul>
             </ul>
           </div>

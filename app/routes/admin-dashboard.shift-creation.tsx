@@ -14,21 +14,42 @@ export const loader: LoaderFunction = async ({ request }) => {
   }
 
   const shifts = await getShiftsByRestaurant(user.restaurantId!);
-  return json({ shifts, restaurantId: user.restaurantId, createdById: user.id });
+  return json({
+    shifts,
+    restaurantId: user.restaurantId,
+    createdById: user.id,
+  });
 };
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
-  const date = new Date(formData.get("date") as string);
-  const startTime = new Date(`${formData.get("date")}T${formData.get("startTime")}:00`);
-  const endTime = new Date(`${formData.get("date")}T${formData.get("endTime")}:00`);
+  const date = new Date(
+    `${formData.get("date") as string}T00:00:00Z`,
+  ).toLocaleDateString("en-US");
+  const startTime = new Date(
+    `${formData.get("date")}T${formData.get("startTime")}:00`,
+  );
+  const endTime = new Date(
+    `${formData.get("date")}T${formData.get("endTime")}:00`,
+  );
   const role = formData.get("role") as string;
-  const assignedToId = formData.get("assignedToId") ? parseInt(formData.get("assignedToId") as string) : undefined;
+  const assignedToId = formData.get("assignedToId")
+    ? parseInt(formData.get("assignedToId") as string)
+    : undefined;
   const restaurantId = parseInt(formData.get("restaurantId") as string);
   const createdById = parseInt(formData.get("createdById") as string);
 
   try {
-    await createShift(date, startTime, endTime, role, restaurantId, createdById, undefined, assignedToId);
+    await createShift(
+      date,
+      startTime,
+      endTime,
+      role,
+      restaurantId,
+      createdById,
+      undefined,
+      assignedToId,
+    );
   } catch (error) {
     return json({ error: (error as Error).message }, { status: 400 });
   }
@@ -41,9 +62,12 @@ export default function ShiftCreation() {
 
   return (
     <div className="mt-8">
-      <Form method="post" className="space-y-4 mt-4">
+      <Form method="post" className="mt-4 space-y-4">
         <div>
-          <label htmlFor="date" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="date"
+            className="block text-sm font-medium text-gray-700"
+          >
             Date
           </label>
           <input
@@ -55,7 +79,10 @@ export default function ShiftCreation() {
           />
         </div>
         <div>
-          <label htmlFor="startTime" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="startTime"
+            className="block text-sm font-medium text-gray-700"
+          >
             Start Time
           </label>
           <input
@@ -67,7 +94,10 @@ export default function ShiftCreation() {
           />
         </div>
         <div>
-          <label htmlFor="endTime" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="endTime"
+            className="block text-sm font-medium text-gray-700"
+          >
             End Time
           </label>
           <input
@@ -79,7 +109,10 @@ export default function ShiftCreation() {
           />
         </div>
         <div>
-          <label htmlFor="assignedToId" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="assignedToId"
+            className="block text-sm font-medium text-gray-700"
+          >
             Role
           </label>
           <input
@@ -92,7 +125,10 @@ export default function ShiftCreation() {
         <input type="hidden" name="restaurantId" value={restaurantId} />
         <input type="hidden" name="createdById" value={createdById} />
         <div>
-          <label htmlFor="assignedToId" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="assignedToId"
+            className="block text-sm font-medium text-gray-700"
+          >
             Assign To (User ID)
           </label>
           <input
@@ -104,7 +140,7 @@ export default function ShiftCreation() {
         </div>
         <button
           type="submit"
-          className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           Create Shift
         </button>
