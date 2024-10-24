@@ -183,6 +183,9 @@ availability
 
 we still need next:
 
+shifts in PROD showing the correct date, but time is 4 hours prior
+availabilities in PROD showing date one day behind, and 4 hours prior
+
 additional super-admin capabilities (users, metrics)
 need to add edit/delete functionality to shifts in the admin-dashboard, including 'assign to', add to schedules
 need to add edit/delete functionality to availabilities in employee dashboard
