@@ -183,10 +183,9 @@ availability
 
 we still need next:
 
-shifts in PROD showing the correct date, but time is 4 hours prior in admin dashboard, works fine in local
-  however in employee dashboard they are showing a day and 4 hours prior- in local the time is correct but date is one day prior
-
-availabilities in PROD showing date one day behind, and 4 hours prior in employee dashboard
+availabilities working spot on in local
+shift still have the 4 hour issue
+cascade delete restaurant -> delete shifts -> delete users -> availabilities -> schedules....etc.
 
 additional super-admin capabilities (users, metrics)
 need to add edit/delete functionality to shifts in the admin-dashboard, including 'assign to', add to schedules

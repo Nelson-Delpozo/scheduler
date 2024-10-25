@@ -4,7 +4,12 @@ import { useLoaderData, Form, useFetcher } from "@remix-run/react";
 import { useState } from "react";
 
 import Modal from "~/components/Modal";
-import { createShift, getShiftsByRestaurant } from "~/models/shift.server";
+import {
+  createShift,
+  updateShift,
+  deleteShift,
+  getShiftsByRestaurant,
+} from "~/models/shift.server";
 import {
   approveUser,
   getUsersByRestaurantId,
@@ -106,6 +111,82 @@ export const action: ActionFunction = async ({ request }) => {
       }
     }
 
+    case "update-shift": {
+      const shiftId = parseInt(formData.get("shiftId") as string);
+      const date = formData.get("date") as string;
+      const startTime = formData.get("startTime") as string;
+      const endTime = formData.get("endTime") as string;
+      const assignedToIdValue = formData.get("assignedToId");
+      const assignedToId = assignedToIdValue
+        ? parseInt(assignedToIdValue as string)
+        : undefined;
+      const role = String(formData.get("role"));
+
+      if (!shiftId || !date || !startTime || !endTime) {
+        return json(
+          { success: false, error: "Missing or invalid data." },
+          { status: 400 },
+        );
+      }
+
+      try {
+        // Treat the parsed time as local and convert to UTC
+        const shiftDate = new Date(`${date}T00:00:00`);
+        const shiftStartTime = new Date(`${date}T${startTime}:00`);
+        const shiftEndTime = new Date(`${date}T${endTime}:00`);
+
+        // Adjust times to UTC if needed
+        const shiftStartTimeUTC = new Date(
+          shiftStartTime.getTime() - shiftStartTime.getTimezoneOffset() * 60000,
+        ).toISOString();
+
+        const shiftEndTimeUTC = new Date(
+          shiftEndTime.getTime() - shiftEndTime.getTimezoneOffset() * 60000,
+        ).toISOString();
+
+        // Construct update data with UTC times
+        const updateData = {
+          date: shiftDate.toISOString(),
+          startTime: shiftStartTimeUTC,
+          endTime: shiftEndTimeUTC,
+          role,
+          assignedToId,
+        };
+
+        await updateShift(
+          shiftId,
+          new Date(date),
+          new Date(`${date}T${startTime}:00`),
+          new Date(`${date}T${endTime}:00`),
+          role,
+          assignedToId,
+          updateData,
+        );
+
+        return redirect("/admin-dashboard");
+      } catch (error) {
+        return json({ error: (error as Error).message }, { status: 400 });
+      }
+    }
+
+    case "delete-shift": {
+      const shiftId = parseInt(formData.get("shiftId") as string);
+
+      if (!shiftId) {
+        return json(
+          { success: false, error: "Invalid shift ID." },
+          { status: 400 },
+        );
+      }
+
+      try {
+        await deleteShift(shiftId);
+        return redirect("/admin-dashboard");
+      } catch (error) {
+        return json({ error: (error as Error).message }, { status: 400 });
+      }
+    }
+
     case "approve": {
       const userId = formData.get("userId") as string;
       if (userId) {
@@ -164,6 +245,14 @@ export default function AdminDashboard() {
   const { user, pendingUsers, restaurantUsers, shifts, restaurantId } =
     useLoaderData<typeof loader>();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [modalShift, setModalShift] = useState<{
+    id: number;
+    date: string;
+    startTime: string;
+    endTime: string;
+    role: string;
+    assignedTo?: number;
+  } | null>(null);
   const [modalUser, setModalUser] = useState<{
     id: number;
     name: string;
@@ -171,6 +260,23 @@ export default function AdminDashboard() {
     phoneNumber: string | null;
   } | null>(null);
   const [activeTab, setActiveTab] = useState("users");
+
+  const openShiftModal = (shift: {
+    id: number;
+    date: string;
+    startTime: string;
+    endTime: string;
+    role: string;
+    assignedTo: number;
+  }) => {
+    setModalShift(shift);
+    setIsModalOpen(true);
+  };
+
+  const closeShiftModal = () => {
+    setIsModalOpen(false);
+    setModalShift(null);
+  };
 
   const openModal = (user: {
     id: number;
@@ -215,16 +321,6 @@ export default function AdminDashboard() {
             Users
           </button>
           <button
-            onClick={() => setActiveTab("schedules")}
-            className={`rounded px-4 py-2 text-sm font-medium ${
-              activeTab === "schedules"
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-gray-800 hover:bg-blue-500"
-            }`}
-          >
-            Schedules
-          </button>
-          <button
             onClick={() => setActiveTab("shifts")}
             className={`rounded px-4 py-2 text-sm font-medium ${
               activeTab === "shifts"
@@ -233,6 +329,16 @@ export default function AdminDashboard() {
             }`}
           >
             Shifts
+          </button>
+          <button
+            onClick={() => setActiveTab("schedules")}
+            className={`rounded px-4 py-2 text-sm font-medium ${
+              activeTab === "schedules"
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-800 hover:bg-blue-500"
+            }`}
+          >
+            Schedules
           </button>
         </div>
 
@@ -317,15 +423,7 @@ export default function AdminDashboard() {
           </div>
         ) : null}
 
-        {activeTab === "schedules" ? (
-          <div className="mt-8">
-            <h2 className="mb-4 text-xl">Schedules</h2>
-            <p className="text-gray-700">
-              Schedules functionality coming soon.
-            </p>
-          </div>
-        ) : null}
-
+        {/* Shifts Tab */}
         {activeTab === "shifts" ? (
           <div className="mt-8">
             <h2 className="mb-4 text-xl">Create and Manage Shifts</h2>
@@ -417,26 +515,67 @@ export default function AdminDashboard() {
                   });
 
                   return (
-                    <li key={shift.id} className="rounded-md border p-4">
-                      <p className="font-semibold">Date: {formattedDate}</p>
-                      <p className="text-gray-600">
-                        Start Time: {formattedStartTime}
-                      </p>
-                      <p className="text-gray-600">
-                        End Time: {formattedEndTime}
-                      </p>
-                      <p>Role: {shift.role || "Unassigned"}</p>
-                      <p>
-                        Assigned To:{" "}
-                        {shift.assignedTo
-                          ? shift.assignedTo.name
-                          : "Unassigned"}
-                      </p>
+                    <li
+                      key={shift.id}
+                      className="flex flex-col items-center justify-between space-y-2 rounded-md border p-4 sm:flex-row sm:space-y-0"
+                    >
+                      <div className="w-full sm:w-auto">
+                        <p className="font-semibold">Date: {formattedDate}</p>
+                        <p className="text-gray-600">
+                          Start Time: {formattedStartTime}
+                        </p>
+                        <p className="text-gray-600">
+                          End Time: {formattedEndTime}
+                        </p>
+                        <p>Role: {shift.role || "Unassigned"}</p>
+                        <p>
+                          Assigned To:{" "}
+                          {shift.assignedTo
+                            ? shift.assignedTo.name
+                            : "Unassigned"}
+                        </p>
+                      </div>
+                      <div className="mt-2 flex w-full flex-col space-y-2 sm:mt-0 sm:w-auto sm:flex-row sm:space-x-2 sm:space-y-0">
+                        <button
+                          type="button"
+                          onClick={() => openShiftModal(shift)}
+                          className="rounded bg-yellow-500 px-4 py-2 text-white hover:bg-yellow-600"
+                        >
+                          Edit
+                        </button>
+                        <Form method="post">
+                          <input
+                            type="hidden"
+                            name="shiftId"
+                            value={shift.id}
+                          />
+                          <input
+                            type="hidden"
+                            name="actionType"
+                            value="delete-shift"
+                          />
+                          <button
+                            type="submit"
+                            className="w-full rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600 sm:w-auto"
+                          >
+                            Delete
+                          </button>
+                        </Form>
+                      </div>
                     </li>
                   );
                 })}
               </ul>
             </ul>
+          </div>
+        ) : null}
+
+        {activeTab === "schedules" ? (
+          <div className="mt-8">
+            <h2 className="mb-4 text-xl">Schedules</h2>
+            <p className="text-gray-700">
+              Schedules functionality coming soon.
+            </p>
           </div>
         ) : null}
       </div>
@@ -509,6 +648,144 @@ export default function AdminDashboard() {
                 <button
                   type="button"
                   onClick={closeModal}
+                  className="rounded bg-gray-500 px-6 py-2 text-white hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+              </div>
+            </fetcher.Form>
+          </div>
+        </Modal>
+      ) : null}
+
+      {/* Modal for editing shifts */}
+      {modalShift ? (
+        <Modal isOpen={isModalOpen} onClose={closeShiftModal}>
+          <div className="mx-auto w-full max-w-md rounded-md bg-white p-6 shadow-lg">
+            <h2 className="mb-4 text-xl font-bold">Edit Shift</h2>
+            <fetcher.Form
+              method="post"
+              action="/admin-dashboard"
+              onSubmit={() => {
+                // Use a small delay to allow Remix to handle the form submission before closing
+                setTimeout(() => {
+                  closeModal();
+                }, 0);
+              }}
+            >
+              <input type="hidden" name="shiftId" value={modalShift.id} />
+              <input type="hidden" name="actionType" value="update-shift" />
+              <div className="mb-4">
+                <label
+                  htmlFor="date"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Date
+                </label>
+                <input
+                  type="date"
+                  name="date"
+                  defaultValue={
+                    new Date(modalShift.date).toISOString().split("T")[0]
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                />
+              </div>
+              <div className="mb-4">
+                <label
+                  htmlFor="startTime"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Start Time
+                </label>
+                <input
+                  type="time"
+                  name="startTime"
+                  defaultValue={new Date(
+                    modalShift.startTime,
+                  ).toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                />
+              </div>
+              <div className="mb-4">
+                <label
+                  htmlFor="endTime"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  End Time
+                </label>
+                <input
+                  type="time"
+                  name="endTime"
+                  defaultValue={new Date(modalShift.endTime).toLocaleTimeString(
+                    "en-GB",
+                    {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    },
+                  )}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label
+                  htmlFor="assignedToId"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Assigned To
+                </label>
+                <select
+                  name="assignedToId"
+                  defaultValue={
+                    modalShift.assignedTo ? modalShift.assignedTo.name : ""
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                >
+                  <option value="">Unassigned</option>
+                  {restaurantUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label
+                  htmlFor="role"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Role
+                </label>
+                <select
+                  name="role"
+                  defaultValue={modalShift.role || ""}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                >
+                  <option value="dr-manager">DR Manager</option>
+                  <option value="bar-manager">Bar Manager</option>
+                  <option value="kitchen-manager">Kitchen Manager</option>
+                  <option value="server">Server</option>
+                  <option value="bartender">Bartender</option>
+                  <option value="chips">Chips</option>
+                  <option value="cook">Cook</option>
+                  <option value="busser">Busser</option>
+                  <option value="barback">Barback</option>
+                </select>
+              </div>
+              <div className="mt-6 flex justify-end space-x-2">
+                <button
+                  type="submit"
+                  className="rounded bg-blue-500 px-6 py-2 text-white hover:bg-blue-600"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={closeShiftModal}
                   className="rounded bg-gray-500 px-6 py-2 text-white hover:bg-gray-600"
                 >
                   Cancel

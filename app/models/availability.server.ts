@@ -1,3 +1,4 @@
+import { availableParallelism } from "node:os";
 import { prisma } from "../prisma.server";
 
 // app/models/availability.server.ts
@@ -36,3 +37,33 @@ export async function getAvailabilityForUser(userId: number) {
     },
   });
 }
+
+export async function updateAvailability(
+  availabilityId: number,
+  date: string,
+  startTime: string,
+  endTime: string
+) {
+
+  try {
+    return await prisma.availability.update({
+      where: { id: availabilityId },
+      data: {
+        date: date,
+        startTime: startTime,
+        endTime: endTime,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating availability:", error);
+    throw new Error("Unable to update availability. Please try again.");
+  }
+}
+
+
+export async function deleteAvailability(availabilityId: number) {
+  return await prisma.availability.delete({
+    where: { id: availabilityId },
+  });
+}
+
