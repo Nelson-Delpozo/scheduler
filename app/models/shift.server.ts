@@ -78,14 +78,13 @@ export async function getShiftById(id: number) {
 
 // Function to update a shift
 export async function updateShift(
-  shiftId: number,
-  updateData: {
-    role?: string;
-    date?: string;
-    startTime?: string;
-    endTime?: string;
-    assignedToId?: number | null;
-  },
+shiftId: number, p0: Date, p1: Date, p2: Date, role: string, assignedToId: number | undefined, updateData: {
+  role?: string;
+  date?: string;
+  startTime?: string;
+  endTime?: string;
+  assignedToId?: number | null;
+},
 ) {
   return prisma.shift.update({
     where: { id: shiftId },
