@@ -379,11 +379,11 @@ export default function EmployeeDashboard() {
             <h2 className="mb-4 text-xl font-bold">Edit Availability</h2>
             <fetcher.Form method="post"
             onSubmit={() => {
-              // Use a small delay to allow Remix to handle the form submission before closing
-              setTimeout(() => {
-                closeAvailabilityModal();
-              }, 0);
-            }}
+                // Use a small delay to allow Remix to handle the form submission before closing
+                setTimeout(() => {
+                  closeAvailabilityModal();
+                }, 0);
+              }}
             >
               <input
                 type="hidden"
