@@ -1,4 +1,3 @@
-import { availableParallelism } from "node:os";
 import { prisma } from "../prisma.server";
 
 // app/models/availability.server.ts
@@ -42,9 +41,8 @@ export async function updateAvailability(
   availabilityId: number,
   date: string,
   startTime: string,
-  endTime: string
+  endTime: string,
 ) {
-
   try {
     return await prisma.availability.update({
       where: { id: availabilityId },
@@ -60,10 +58,8 @@ export async function updateAvailability(
   }
 }
 
-
 export async function deleteAvailability(availabilityId: number) {
   return await prisma.availability.delete({
     where: { id: availabilityId },
   });
 }
-

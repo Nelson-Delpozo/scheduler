@@ -184,13 +184,15 @@ availability
 we still need next:
 
 availabilities working spot on in local
-shift still have the 4 hour issue
-cascade delete restaurant -> delete shifts -> delete users -> availabilities -> schedules....etc.
+shift still have the 4 hour issue, even when viewed in employee dashboard
+add users to super-admin dashboard
 
-additional super-admin capabilities (users, metrics)
-need to add edit/delete functionality to shifts in the admin-dashboard, including 'assign to', add to schedules
-need to add edit/delete functionality to availabilities in employee dashboard
-need to add some functionality to match shifts and availabilities, make it easier for the admin to assign shifts to employees
+
+cascade delete restaurant -> delete shifts -> delete users -> availabilities -> schedules....etc.
+admin dashboard 'assign to' button and modal on shifts
+super-admin metrics
+
+auto schedule generation
 
 error handling for duplicate phone number
 date validations for shifts, availabilities, schedules: no past dates, adjustable lock-out window for availability changes controlled by admin
