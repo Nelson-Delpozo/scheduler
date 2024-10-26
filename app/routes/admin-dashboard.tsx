@@ -93,17 +93,22 @@ export const action: ActionFunction = async ({ request }) => {
         );
       }
 
-      await createShift(
-        date,
-        startTime,
-        endTime,
-        role,
-        restaurantId,
-        createdById,
-        undefined,
-        assignedToId, // Will be null if not provided
-      );
-      return redirect("/admin-dashboard");
+      try {
+        // Parse the date and time correctly
+        await createShift(
+          new Date(date),
+          new Date(`${date}T${startTime}:00`),
+          new Date(`${date}T${endTime}:00`),
+          role,
+          restaurantId,
+          createdById,
+          undefined,
+          assignedToId, // Will be null if not provided
+        );
+        return redirect("/admin-dashboard");
+      } catch (error) {
+        return json({ error: (error as Error).message }, { status: 400 });
+      }
     }
 
     case "update-shift": {
@@ -144,8 +149,8 @@ export const action: ActionFunction = async ({ request }) => {
           date: shiftDate.toISOString(),
           startTime: shiftStartTimeUTC,
           endTime: shiftEndTimeUTC,
-          role: role,
-          assignedToId: assignedToId,
+          role,
+          assignedToId,
         };
 
         await updateShift(
@@ -156,7 +161,7 @@ export const action: ActionFunction = async ({ request }) => {
           role,
           assignedToId,
           updateData,
-        )
+        );
 
         return redirect("/admin-dashboard");
       } catch (error) {

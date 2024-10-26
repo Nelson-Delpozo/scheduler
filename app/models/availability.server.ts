@@ -38,8 +38,11 @@ export async function getAvailabilityForUser(userId: number) {
 }
 
 export async function updateAvailability(
-availabilityId: number, p0: Date, p1: Date, p2: Date, updateData: { date: string; startTime: string; endTime: string; }, date: string, startTime: string, endTime: string) {
-
+  availabilityId: number,
+  date: string,
+  startTime: string,
+  endTime: string,
+) {
   try {
     return await prisma.availability.update({
       where: { id: availabilityId },
@@ -55,10 +58,8 @@ availabilityId: number, p0: Date, p1: Date, p2: Date, updateData: { date: string
   }
 }
 
-
 export async function deleteAvailability(availabilityId: number) {
   return await prisma.availability.delete({
     where: { id: availabilityId },
   });
 }
-
