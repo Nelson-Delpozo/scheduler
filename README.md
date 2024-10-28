@@ -175,23 +175,24 @@ We use [Prettier](https://prettier.io/) for auto-formatting in this project. It'
 
 this is the restaurant scheduler app
 
-we have so far:
-users, employee, admin, and super admin
-restaurants
-shifts
-availability
 
 we still need next:
 
 availabilities working spot on in local
-shift still have the 4 hour issue, even when viewed in employee dashboard
+shift being rendered correctly at first, drop 4 hours after editing
+
+add names to shifts ('morning', 'early cut', 'closer')
+save as templates
+
 add users to super-admin dashboard
+and restaurant id and name to users in super-admin dashboard, sort by restaurant, with a filter
 
 
 cascade delete restaurant -> delete shifts -> delete users -> availabilities -> schedules....etc.
 admin dashboard 'assign to' button and modal on shifts
 super-admin metrics
 
+schedule functionality
 auto schedule generation
 
 error handling for duplicate phone number
