@@ -242,7 +242,7 @@ export const action: ActionFunction = async ({ request }) => {
 };
 
 export default function AdminDashboard() {
-  const { user, pendingUsers, restaurantUsers, shifts, restaurantId } =
+  const { pendingUsers, restaurantUsers, shifts, restaurantId } =
     useLoaderData<typeof loader>();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [modalShift, setModalShift] = useState<{
@@ -487,32 +487,32 @@ export default function AdminDashboard() {
               <ul className="space-y-4">
                 {shifts.map((shift: Shift) => {
                   // Parse the shift date string as a UTC date
-                  const shiftDate = new Date(shift.date);
+                  // const shiftDate = new Date(shift.date);
 
-                  // Extract the year, month, and day in UTC to prevent local timezone adjustments
-                  const formattedDate = shiftDate.toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    timeZone: "UTC",
-                  });
+                  // // Extract the year, month, and day in UTC to prevent local timezone adjustments
+                  // const formattedDate = shiftDate.toLocaleDateString("en-US", {
+                  //   year: "numeric",
+                  //   month: "2-digit",
+                  //   day: "2-digit",
+                  //   timeZone: "UTC",
+                  // });
 
-                  // Format the start and end times in the user's local time zone
-                  const formattedStartTime = new Date(
-                    shift.startTime,
-                  ).toLocaleTimeString(undefined, {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: true,
-                  });
+                  // // Format the start and end times in the user's local time zone
+                  // const formattedStartTime = new Date(
+                  //   shift.startTime,
+                  // ).toLocaleTimeString(undefined, {
+                  //   hour: "2-digit",
+                  //   minute: "2-digit",
+                  //   hour12: true,
+                  // });
 
-                  const formattedEndTime = new Date(
-                    shift.endTime,
-                  ).toLocaleTimeString(undefined, {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: true,
-                  });
+                  // const formattedEndTime = new Date(
+                  //   shift.endTime,
+                  // ).toLocaleTimeString(undefined, {
+                  //   hour: "2-digit",
+                  //   minute: "2-digit",
+                  //   hour12: true,
+                  // });
 
                   return (
                     <li
@@ -520,12 +520,19 @@ export default function AdminDashboard() {
                       className="flex flex-col items-center justify-between space-y-2 rounded-md border p-4 sm:flex-row sm:space-y-0"
                     >
                       <div className="w-full sm:w-auto">
-                        <p className="font-semibold">Date: {formattedDate}</p>
-                        <p className="text-gray-600">
-                          Start Time: {formattedStartTime}
+                        <p className="font-semibold">
+                          Date:{" "}
+                          {new Date(shift.date).toLocaleDateString("en-US")}
                         </p>
                         <p className="text-gray-600">
-                          End Time: {formattedEndTime}
+                          Start Time:{" "}
+                          {new Date(shift.startTime).toLocaleTimeString(
+                            "en-US",
+                          )}
+                        </p>
+                        <p className="text-gray-600">
+                          End Time:{" "}
+                          {new Date(shift.endTime).toLocaleTimeString("en-US")}
                         </p>
                         <p>Role: {shift.role || "Unassigned"}</p>
                         <p>
@@ -720,13 +727,12 @@ export default function AdminDashboard() {
                 <input
                   type="time"
                   name="endTime"
-                  defaultValue={new Date(modalShift.endTime).toLocaleTimeString(
-                    "en-GB",
-                    {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    },
-                  )}
+                  defaultValue={new Date(
+                    modalShift.endTime,
+                  ).toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
                 />
               </div>

@@ -310,9 +310,9 @@ export default function EmployeeDashboard() {
                       className="flex flex-col items-center justify-between space-y-2 rounded-md border p-4 sm:flex-row sm:space-y-0"
                     >
                       <div className="w-full sm:w-auto">
-                        <p className="font-semibold">
-                          Date:{" "}
-                          {new Date(avail.date).toLocaleDateString("en-US")}
+                      <p className="font-semibold">
+                          Shift Date:{" "}
+                          {new Date(avail.date).toISOString().split("T")[0]}
                         </p>
                         <p className="text-gray-600">
                           Start Time:{" "}
