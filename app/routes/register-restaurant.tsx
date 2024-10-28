@@ -132,6 +132,8 @@ export default function RegisterRestaurant() {
               Restaurant Name
             </label>
             <input
+              // eslint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus={true}
               ref={restaurantNameRef}
               id="restaurantName"
               name="restaurantName"
@@ -267,7 +269,7 @@ export default function RegisterRestaurant() {
           </button>
         </Form>
       </div>
-      <div className="text-center text-sm text-gray-500 mt-5">
+      <div className="mt-5 text-center text-sm text-gray-500">
         <Link
           className="text-blue-500 underline"
           to={{

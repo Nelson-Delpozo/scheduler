@@ -210,7 +210,8 @@ export default function Join() {
                 ref={nameRef}
                 id="name"
                 required
-                autoFocus
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus={true}
                 name="name"
                 type="text"
                 autoComplete="name"

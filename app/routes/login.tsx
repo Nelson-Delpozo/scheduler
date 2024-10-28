@@ -140,6 +140,7 @@ export default function LoginPage() {
                 ref={emailRef}
                 id="email"
                 required
+                // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus={true}
                 name="email"
                 type="email"
