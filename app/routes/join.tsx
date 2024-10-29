@@ -7,18 +7,29 @@ import { useEffect, useRef } from "react";
 
 import { getRestaurantById } from "~/models/restaurant.server";
 import { createUser, getUserByEmail } from "~/models/user.server";
-import { createUserSession } from "~/session.server";
-import { safeRedirect, validateEmail, validatePhoneNumber } from "~/utils";
+import { validateEmail, validatePhoneNumber } from "~/utils";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const name = formData.get("name");
   const email = formData.get("email");
   const password = formData.get("password");
+  const passwordConfirmation = formData.get("passwordConfirmation");
+
+  if (password !== passwordConfirmation) {
+    return json(
+      {
+        errors: {
+          password: "Passwords do not match",
+          passwordConfirmation: null,
+        },
+      },
+      { status: 400 },
+    );
+  }
   let phoneNumber = formData.get("phoneNumber");
   const restaurantId = formData.get("restaurantId");
   const consentToText = formData.get("consentToText") === "on"; // Extract consent value
-  const redirectTo = safeRedirect(formData.get("redirectTo"), "/");
 
   if (!name || typeof name !== "string") {
     return json(
@@ -140,17 +151,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       {
         errors: {
           name: null,
-          email: "A user already exists with this email",
-          password: null,
+          email: null,
+          password: "Passwords do not match",
+          passwordConfirmation: null,
           phoneNumber: null,
           restaurantId: null,
         },
       },
-      { status: 400 },
+      { status: 400 }
     );
+    
   }
 
-  const user = await createUser(
+  await createUser(
     name,
     email,
     password,
@@ -159,24 +172,20 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     Number(restaurantId),
   );
 
-  // Instead of creating a user session, redirect to a page informing user that admin approval is needed
+  // Redirect to inform the user their account is pending approval
   return redirect("/account-pending-approval");
 
-  return createUserSession({
-    redirectTo,
-    remember: false,
-    request,
-    userId: user.id,
-  });
+  // Instead of creating a user session, redirect to a page informing user that admin approval is needed
+  return redirect("/account-pending-approval");
 };
 
 export default function Join() {
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") ?? undefined;
-  const actionData = useActionData<typeof action>();
+  const actionData = useActionData<ActionData>();
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const passwordConfirmationRef = useRef<HTMLInputElement>(null);
   const phoneNumberRef = useRef<HTMLInputElement>(null);
   const restaurantIdRef = useRef<HTMLInputElement>(null);
 
@@ -187,6 +196,8 @@ export default function Join() {
       emailRef.current?.focus();
     } else if (actionData?.errors?.password) {
       passwordRef.current?.focus();
+    } else if (actionData?.errors?.passwordConfirmation) {
+      passwordConfirmationRef.current?.focus();
     } else if (actionData?.errors?.phoneNumber) {
       phoneNumberRef.current?.focus();
     } else if (actionData?.errors?.restaurantId) {
@@ -194,14 +205,27 @@ export default function Join() {
     }
   }, [actionData]);
 
+  interface FormErrors {
+    name?: string | null;
+    email?: string | null;
+    password?: string | null;
+    passwordConfirmation?: string | null;
+    phoneNumber?: string | null;
+    restaurantId?: string | null;
+  }
+  
+  interface ActionData {
+    errors?: FormErrors;
+  }
+
   return (
-    <div className="flex min-h-full flex-col justify-center">
+    <div className="flex min-h-full flex-col justify-center dark:bg-gray-900 dark:text-white">
       <div className="mx-auto w-full max-w-md px-8">
         <Form method="post" className="space-y-6">
           <div>
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Name
             </label>
@@ -217,10 +241,13 @@ export default function Join() {
                 autoComplete="name"
                 aria-invalid={actionData?.errors?.name ? true : undefined}
                 aria-describedby="name-error"
-                className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+                className="w-full rounded border border-gray-500 px-2 py-1 text-lg dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               />
               {actionData?.errors?.name ? (
-                <div className="pt-1 text-red-700" id="name-error">
+                <div
+                  className="pt-1 text-red-700 dark:text-red-400"
+                  id="name-error"
+                >
                   {actionData.errors.name}
                 </div>
               ) : null}
@@ -230,7 +257,7 @@ export default function Join() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Email address
             </label>
@@ -244,10 +271,13 @@ export default function Join() {
                 autoComplete="email"
                 aria-invalid={actionData?.errors?.email ? true : undefined}
                 aria-describedby="email-error"
-                className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+                className="w-full rounded border border-gray-500 px-2 py-1 text-lg dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               />
               {actionData?.errors?.email ? (
-                <div className="pt-1 text-red-700" id="email-error">
+                <div
+                  className="pt-1 text-red-700 dark:text-red-400"
+                  id="email-error"
+                >
                   {actionData.errors.email}
                 </div>
               ) : null}
@@ -257,7 +287,7 @@ export default function Join() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Password
             </label>
@@ -270,10 +300,13 @@ export default function Join() {
                 autoComplete="new-password"
                 aria-invalid={actionData?.errors?.password ? true : undefined}
                 aria-describedby="password-error"
-                className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+                className="w-full rounded border border-gray-500 px-2 py-1 text-lg dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               />
               {actionData?.errors?.password ? (
-                <div className="pt-1 text-red-700" id="password-error">
+                <div
+                  className="pt-1 text-red-700 dark:text-red-400"
+                  id="password-error"
+                >
                   {actionData.errors.password}
                 </div>
               ) : null}
@@ -282,8 +315,34 @@ export default function Join() {
 
           <div>
             <label
+              htmlFor="passwordConfirmation"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Confirm Password
+            </label>
+            <div className="mt-1">
+              <input
+                id="passwordConfirmation"
+                ref={passwordConfirmationRef}
+                name="passwordConfirmation"
+                type="password"
+                autoComplete="new-password"
+                aria-invalid={actionData?.errors?.passwordConfirmation ? true : undefined}
+                aria-describedby="passwordConfirmation-error"
+                className="w-full rounded border border-gray-500 px-2 py-1 text-lg dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+              />
+              {actionData?.errors?.passwordConfirmation ? (
+                <div className="pt-1 text-red-700 dark:text-red-400" id="passwordConfirmation-error">
+                  {actionData.errors.passwordConfirmation}
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div>
+            <label
               htmlFor="phoneNumber"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Phone Number
             </label>
@@ -298,10 +357,13 @@ export default function Join() {
                   actionData?.errors?.phoneNumber ? true : undefined
                 }
                 aria-describedby="phoneNumber-error"
-                className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+                className="w-full rounded border border-gray-500 px-2 py-1 text-lg dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               />
               {actionData?.errors?.phoneNumber ? (
-                <div className="pt-1 text-red-700" id="phoneNumber-error">
+                <div
+                  className="pt-1 text-red-700 dark:text-red-400"
+                  id="phoneNumber-error"
+                >
                   {actionData.errors.phoneNumber}
                 </div>
               ) : null}
@@ -311,7 +373,7 @@ export default function Join() {
           <div>
             <label
               htmlFor="restaurantId"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Restaurant ID
             </label>
@@ -326,10 +388,13 @@ export default function Join() {
                   actionData?.errors?.restaurantId ? true : undefined
                 }
                 aria-describedby="restaurantId-error"
-                className="w-full rounded border border-gray-500 px-2 py-1 text-lg"
+                className="w-full rounded border border-gray-500 px-2 py-1 text-lg dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               />
               {actionData?.errors?.restaurantId ? (
-                <div className="pt-1 text-red-700" id="restaurantId-error">
+                <div
+                  className="pt-1 text-red-700 dark:text-red-400"
+                  id="restaurantId-error"
+                >
                   {actionData.errors.restaurantId}
                 </div>
               ) : null}
@@ -337,23 +402,26 @@ export default function Join() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              <input type="checkbox" name="consentToText" className="mr-2" />I
-              agree to receive text messages for scheduling and updates.
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <input
+                type="checkbox"
+                name="consentToText"
+                className="mr-2 dark:bg-gray-800"
+              />
+              I agree to receive text messages for scheduling and updates.
             </label>
           </div>
 
-          <input type="hidden" name="redirectTo" value={redirectTo} />
           <button
             type="submit"
-            className="w-full rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
+            className="w-full rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400 dark:bg-blue-700 dark:hover:bg-blue-600 dark:focus:bg-blue-500"
           >
             Create Account
           </button>
-          <div className="text-center text-sm text-gray-500">
+          <div className="text-center text-sm text-gray-500 dark:text-gray-400">
             Already have an account?{" "}
             <Link
-              className="text-blue-500 underline"
+              className="text-blue-500 underline dark:text-blue-400"
               to={{
                 pathname: "/login",
                 search: searchParams.toString(),

@@ -1,17 +1,20 @@
-// app/prisma.server.ts
 import { PrismaClient } from "@prisma/client";
+
+// Extend the Node.js global object type with a `prisma` property
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient | undefined;
+}
 
 let prisma: PrismaClient;
 
-// Check if we are running in production or development
 if (process.env.NODE_ENV === "production") {
   prisma = new PrismaClient();
 } else {
-  // To avoid creating multiple instances of PrismaClient in development
-  if (!(global as any).prisma) {
-    (global as any).prisma = new PrismaClient();
+  if (!global.prisma) {
+    global.prisma = new PrismaClient();
   }
-  prisma = (global as any).prisma;
+  prisma = global.prisma;
 }
 
 export { prisma };

@@ -1,8 +1,8 @@
 import { User } from "@prisma/client";
 import { createCookieSessionStorage, redirect } from "@remix-run/node";
+import bcrypt from "bcryptjs";
 import invariant from "tiny-invariant";
 
-// import type { User } from "~/models/user.server";
 import { getUserById } from "~/models/user.server";
 import { prisma } from "~/prisma.server";
 
@@ -16,70 +16,76 @@ export const sessionStorage = createCookieSessionStorage({
     sameSite: "lax",
     secrets: [process.env.SESSION_SECRET],
     secure: process.env.NODE_ENV === "production",
-    expires: null
+    expires: undefined, // Session expires when browser is closed
   },
 });
 
 const USER_SESSION_KEY = "userId";
+const ROLES = {
+  ADMIN: "admin",
+  SUPER_ADMIN: "super-admin",
+};
+const STATUS = {
+  APPROVED: "approved",
+};
 
 export async function getSession(request: Request) {
   const cookie = request.headers.get("Cookie") ?? "";
   return sessionStorage.getSession(cookie);
 }
 
-export async function requireAdmin(request: Request) {
-  const session = await getSession(request);
-  if (!session) {
-    return null;
-  }
-
-  const userId = session.get("userId");
-  if (!userId) {
-    return null;
-  }
-
+export async function verifyLogin(email: string, password: string) {
   const user = await prisma.user.findUnique({
-    where: { id: userId },
+    where: { email },
   });
 
-  if (!user || user.role !== "admin") {
-    return null;
+  if (!user) {
+    throw new Error("User not found");
+  }
+  if (user.status !== STATUS.APPROVED) {
+    throw new Error("Account not approved");
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw new Error("Invalid password");
   }
 
   return user;
 }
 
-
-export async function requireSuperAdmin(request: Request) {
-  const session = await getSession(request);
-  const userId = session.get("userId");
-
-  if (!userId) {
-    return null;
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
-
-  if (user?.role !== "super-admin") {
-    return null;
-  }
-
-  return user;
-}
-
-export async function getUserId(
-  request: Request,
-): Promise<User["id"] | undefined> {
+export async function requireRole(request: Request, role: string) {
   const session = await getSession(request);
   const userId = session.get(USER_SESSION_KEY);
-  return userId;
+  if (!userId) throw redirect("/login");
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user || user.role !== role) {
+    throw redirect("/unauthorized");
+  }
+
+  return user;
+}
+
+export async function requireAdmin(request: Request) {
+  return requireRole(request, ROLES.ADMIN);
+}
+
+export async function requireSuperAdmin(request: Request) {
+  return requireRole(request, ROLES.SUPER_ADMIN);
+}
+
+export async function getUserId(request: Request): Promise<User["id"] | undefined> {
+  const session = await getSession(request);
+  return session.get(USER_SESSION_KEY);
 }
 
 export async function getUser(request: Request) {
   const userId = await getUserId(request);
-  if (userId === undefined) return null;
+  if (!userId) return null;
 
   const user = await getUserById(userId);
   if (user) return user;
@@ -101,7 +107,6 @@ export async function requireUserId(
 
 export async function requireUser(request: Request) {
   const userId = await requireUserId(request);
-
   const user = await getUserById(userId);
   if (user) return user;
 
@@ -121,13 +126,13 @@ export async function createUserSession({
 }) {
   const session = await getSession(request);
   session.set(USER_SESSION_KEY, userId);
-  return redirect(redirectTo, {
+
+  const maxAge = remember ? 60 * 60 * 24 * 7 : undefined; // 7 days if remembered
+  const isSafeRedirect = safeRedirect(redirectTo);
+  
+  return redirect(isSafeRedirect, {
     headers: {
-      "Set-Cookie": await sessionStorage.commitSession(session, {
-        maxAge: remember
-          ? 60 * 60 * 24 * 7 // 7 days
-          : undefined,
-      }),
+      "Set-Cookie": await sessionStorage.commitSession(session, { maxAge }),
     },
   });
 }
@@ -139,4 +144,9 @@ export async function logout(request: Request) {
       "Set-Cookie": await sessionStorage.destroySession(session),
     },
   });
+}
+
+function safeRedirect(redirectTo: string, defaultPath = "/") {
+  // Basic check to prevent open redirects
+  return redirectTo.startsWith("/") ? redirectTo : defaultPath;
 }

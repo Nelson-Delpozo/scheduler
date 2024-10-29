@@ -1,4 +1,3 @@
-// app/models/user.server.ts
 import bcrypt from "bcryptjs";
 
 import { prisma } from "~/prisma.server";
@@ -37,160 +36,70 @@ export async function createAdminUser(
   consentToText: boolean,
   restaurantId: number,
 ) {
-  const passwordHash = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   return prisma.user.create({
     data: {
       name,
       email,
-      password: passwordHash,
-      phoneNumber, // Add phoneNumber field
-      consentToText, // Add consentToText field
-      role: "admin", // Default role; change this as per your needs
-      status: "pending", // New users require admin approval
-      restaurantId, // Associate the user with a restaurant
+      password: hashedPassword,
+      phoneNumber,
+      consentToText,
+      restaurantId,
+      role: "admin",
+      status: "pending", // Default status; adjust if needed
     },
+  });
+}
+
+// Get a user by ID
+export async function getUserById(id: number) {
+  return prisma.user.findUnique({
+    where: { id },
   });
 }
 
 export async function getUserByEmail(email: string) {
   return prisma.user.findUnique({
     where: { email },
-    select: {
-      id: true,
-      email: true,
-      password: true,
-      role: true,
-      name: true, // Added name field
-      status: true, // Include status field here
-    },
   });
 }
 
-export async function getUsersByRole(role: string) {
-  return prisma.user.findMany({ where: { role } });
+// Get all users
+export async function getAllUsers() {
+  return prisma.user.findMany();
 }
 
-// Function to get a user by ID
-export async function getUserById(userId: number) {
-  return prisma.user.findUnique({
-    where: { id: userId },
-  });
-}
-
-// Function to get users pending approval
-export async function getUsersPendingApproval() {
-  return prisma.user.findMany({
-    where: {
-      status: "pending",
-    },
-    select: {
-      id: true,
-      email: true,
-      phoneNumber: true,
-      name: true, // Added name field
-    },
-  });
-}
-
-// Function to get users pending approval by restaurant ID
-export async function getUsersPendingApprovalByRestaurantId(restaurantId: number) {
-  return prisma.user.findMany({
-    where: {
-      status: "pending",
-      restaurantId: restaurantId, // Filter by the restaurant ID
-    },
-    select: {
-      id: true,
-      email: true,
-      phoneNumber: true,
-      name: true,
-    },
-  });
-}
-
-
-
-// Function to approve a user
-export async function approveUser(userId: number) {
-  return prisma.user.update({
-    where: {
-      id: userId,
-    },
-    data: {
-      status: "approved",
-    },
-  });
-}
-
-// Function to get users by restaurant ID
-export async function getUsersByRestaurantId(restaurantId: number) {
+// Get all users by restaurant ID
+export async function getUsersByRestaurant(restaurantId: number) {
   return prisma.user.findMany({
     where: { restaurantId },
-    orderBy: {
-      createdAt: 'desc', // Sort by created date in descending order
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phoneNumber: true,
-      role: true,
-      status: true,
-      createdAt: true,
-    },
   });
 }
 
-// Function to get users by restaurant ID
-export async function getAllUsers() {
-  return prisma.user.findMany({
-    orderBy: {
-      createdAt: 'desc', // Sort by created date in descending order
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phoneNumber: true,
-      role: true,
-      status: true,
-      createdAt: true,
-      restaurantId: true
-    },
-  });
-}
-
-// Function to update a user
-export async function updateUser(userId: number, data: Partial<{ name: string; role: string; phoneNumber: string }>) {
+// Update user by ID
+export async function updateUser(
+  id: number,
+  data: Partial<{
+    email: string;
+    password: string;
+    role: string;
+    name: string;
+    phoneNumber: string;
+    consentToText: boolean;
+    restaurantId: number;
+    status: string;
+  }>,
+) {
   return prisma.user.update({
-    where: { id: userId },
+    where: { id },
     data,
   });
 }
 
-// Function to delete a user
-export async function deleteUser(userId: number) {
+// Delete user by ID
+export async function deleteUser(id: number) {
   return prisma.user.delete({
-    where: { id: userId },
+    where: { id },
   });
-}
-
-// Function to verify a user's login credentials
-export async function verifyLogin(email: string, password: string) {
-  const user = await prisma.user.findUnique({
-    where: { email },
-  });
-
-  if (!user) {
-    return null; // User not found
-  }
-
-  // Compare the provided password with the stored hashed password
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) {
-    return null; // Password doesn't match
-  }
-
-  return user; // Return the user if email and password are correct
 }
