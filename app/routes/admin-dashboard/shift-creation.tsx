@@ -1,5 +1,3 @@
-// app/routes/admin-dashboard/shift-creation.tsx
-
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
@@ -23,9 +21,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
-  const date = new Date(
-    `${formData.get("date") as string}T00:00:00Z`,
-  ).toLocaleDateString("en-US");
+  const date = new Date(formData.get("date") as string);
   const startTime = new Date(
     `${formData.get("date")}T${formData.get("startTime")}:00`,
   );
@@ -41,13 +37,13 @@ export const action: ActionFunction = async ({ request }) => {
 
   try {
     await createShift(
+      "Shift", // Name of the shift or can be dynamically set
       date,
       startTime,
       endTime,
       role,
       restaurantId,
       createdById,
-      undefined,
       assignedToId,
     );
   } catch (error) {
@@ -61,12 +57,12 @@ export default function ShiftCreation() {
   const { restaurantId, createdById } = useLoaderData<typeof loader>();
 
   return (
-    <div className="mt-8">
+    <div className="mt-8 dark:bg-gray-900 dark:text-white">
       <Form method="post" className="mt-4 space-y-4">
         <div>
           <label
             htmlFor="date"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Date
           </label>
@@ -75,13 +71,13 @@ export default function ShiftCreation() {
             id="date"
             name="date"
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:bg-gray-800 dark:text-white"
           />
         </div>
         <div>
           <label
             htmlFor="startTime"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Start Time
           </label>
@@ -90,13 +86,13 @@ export default function ShiftCreation() {
             id="startTime"
             name="startTime"
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:bg-gray-800 dark:text-white"
           />
         </div>
         <div>
           <label
             htmlFor="endTime"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             End Time
           </label>
@@ -105,21 +101,22 @@ export default function ShiftCreation() {
             id="endTime"
             name="endTime"
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:bg-gray-800 dark:text-white"
           />
         </div>
         <div>
           <label
-            htmlFor="assignedToId"
-            className="block text-sm font-medium text-gray-700"
+            htmlFor="role"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Role
           </label>
           <input
-            type="string"
+            type="text"
             id="role"
             name="role"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            required
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:bg-gray-800 dark:text-white"
           />
         </div>
         <input type="hidden" name="restaurantId" value={restaurantId} />
@@ -127,7 +124,7 @@ export default function ShiftCreation() {
         <div>
           <label
             htmlFor="assignedToId"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Assign To (User ID)
           </label>
@@ -135,7 +132,7 @@ export default function ShiftCreation() {
             type="number"
             id="assignedToId"
             name="assignedToId"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:bg-gray-800 dark:text-white"
           />
         </div>
         <button

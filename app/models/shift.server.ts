@@ -1,27 +1,16 @@
 import { prisma } from "~/prisma.server";
 
 // Create a new shift
-export async function createShift({
-  name,
-  date,
-  startTime,
-  endTime,
-  role,
-  restaurantId,
-  createdById,
-  scheduleId,
-  assignedToId,
-}: {
-  name: string;
-  date: Date;
-  startTime: Date;
-  endTime: Date;
-  role: string;
-  restaurantId: number;
-  createdById: number;
-  scheduleId?: number;
-  assignedToId?: number;
-}) {
+export async function createShift(
+  name: string, // Ensure name is included
+  date: Date,
+  startTime: Date,
+  endTime: Date,
+  role: string,
+  restaurantId: number,
+  createdById: number,
+  assignedToId?: number,
+) {
   if (!role) {
     throw new Error("Role is required when creating a shift.");
   }
@@ -39,22 +28,21 @@ export async function createShift({
     throw new Error("Specified restaurant does not exist.");
   }
 
-  // Format date and time
-  const formattedDate = new Date(date.toDateString()).toISOString();
-  const startDateTime = new Date(`${formattedDate.split("T")[0]}T${startTime.toTimeString()}`).toISOString();
-  const endDateTime = new Date(`${formattedDate.split("T")[0]}T${endTime.toTimeString()}`).toISOString();
+  // Format the date and time values to ISO strings
+  const formattedDate = date.toISOString().split("T")[0]; // YYYY-MM-DD
+  const formattedStartTime = startTime.toISOString(); // Full ISO for start time
+  const formattedEndTime = endTime.toISOString(); // Full ISO for end time
 
   // Create the shift
   return prisma.shift.create({
     data: {
       name,
       date: formattedDate,
-      startTime: startDateTime,
-      endTime: endDateTime,
+      startTime: formattedStartTime,
+      endTime: formattedEndTime,
       role,
       restaurantId,
       createdById,
-      scheduleId,
       ...(assignedToId && { assignedToId }),
     },
   });
@@ -68,7 +56,6 @@ export async function getShiftsForEmployee(employeeId: number) {
     where: { assignedToId: employeeId },
     select: {
       id: true,
-      name: true,
       date: true,
       startTime: true,
       endTime: true,
@@ -86,7 +73,6 @@ export async function getShiftsByRestaurant(restaurantId: number) {
     where: { restaurantId },
     select: {
       id: true,
-      name: true,
       date: true,
       startTime: true,
       endTime: true,
@@ -111,28 +97,29 @@ export async function getShiftById(id: number) {
   });
 
   if (!shift) throw new Error("Shift not found.");
-
   return shift;
 }
 
 // Update a shift by ID with edge case handling
 export async function updateShift(
-shiftId: number, p0: Date, p1: Date, p2: Date, role: string, assignedToId: number | undefined, updateData: { date: string; startTime: string; endTime: string; role: string; assignedToId: number | undefined; }, updateData: {
-  name?: string;
-  date?: Date;
-  startTime?: Date;
-  endTime?: Date;
-  role?: string;
-  assignedToId?: number | null;
-}) {
+  shiftId: number,
+  updateData: {
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    role?: string;
+    assignedToId?: number | null;
+  },
+) {
   if (!shiftId) throw new Error("Shift ID is required.");
-
-  // Validate times if provided
-  if (updateData.startTime && updateData.endTime && updateData.endTime <= updateData.startTime) {
+  if (
+    updateData.startTime &&
+    updateData.endTime &&
+    new Date(updateData.endTime) <= new Date(updateData.startTime)
+  ) {
     throw new Error("End time must be after start time.");
   }
 
-  // Ensure updated restaurant or assigned user exists if IDs are provided
   if (updateData.assignedToId) {
     const userExists = await prisma.user.findUnique({
       where: { id: updateData.assignedToId },
@@ -140,17 +127,24 @@ shiftId: number, p0: Date, p1: Date, p2: Date, role: string, assignedToId: numbe
     if (!userExists) throw new Error("Assigned user does not exist.");
   }
 
+  const formattedDate = updateData.date
+    ? new Date(updateData.date).toISOString().split("T")[0]
+    : undefined;
+  const startDateTime = updateData.startTime
+    ? new Date(`${formattedDate}T${updateData.startTime}:00`).toISOString()
+    : undefined;
+  const endDateTime = updateData.endTime
+    ? new Date(`${formattedDate}T${updateData.endTime}:00`).toISOString()
+    : undefined;
+
   return prisma.shift.update({
     where: { id: shiftId },
     data: {
-      ...updateData,
-      ...(updateData.date && { date: new Date(updateData.date.toDateString()).toISOString() }),
-      ...(updateData.startTime && {
-        startTime: new Date(`${updateData.date!.toDateString()}T${updateData.startTime.toTimeString()}`).toISOString(),
-      }),
-      ...(updateData.endTime && {
-        endTime: new Date(`${updateData.date!.toDateString()}T${updateData.endTime.toTimeString()}`).toISOString(),
-      }),
+      ...(formattedDate && { date: formattedDate }),
+      ...(startDateTime && { startTime: startDateTime }),
+      ...(endDateTime && { endTime: endDateTime }),
+      ...(updateData.role && { role: updateData.role }),
+      ...(updateData.assignedToId && { assignedToId: updateData.assignedToId }),
     },
   });
 }

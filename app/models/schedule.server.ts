@@ -65,6 +65,31 @@ export async function getScheduleById(id: number) {
   return schedule;
 }
 
+// Get schedules for a specific restaurant
+export async function getSchedulesByRestaurant(restaurantId: number) {
+  if (!restaurantId) throw new Error("Restaurant ID is required.");
+
+  return prisma.schedule.findMany({
+    where: { restaurantId },
+    select: {
+      id: true,
+      name: true,
+      startDate: true,
+      endDate: true,
+      shifts: {
+        select: {
+          id: true,
+          role: true,
+          assignedTo: {
+            select: { name: true },
+          },
+        },
+      },
+    },
+    orderBy: { startDate: "asc" },
+  });
+}
+
 // Update a schedule by ID with validation
 export async function updateSchedule(
   id: number,

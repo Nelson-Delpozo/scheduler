@@ -77,6 +77,48 @@ export async function getUsersByRestaurant(restaurantId: number) {
   });
 }
 
+export async function getUsersPendingApprovalByRestaurantId(restaurantId: number) {
+  if (!restaurantId) throw new Error("Restaurant ID is required.");
+
+  return prisma.user.findMany({
+    where: {
+      restaurantId,
+      status: "pending",  // Fetch users with 'pending' status
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phoneNumber: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+}
+
+
+export async function getUsersByRestaurantId(restaurantId: number) {
+  if (!restaurantId) throw new Error("Restaurant ID is required.");
+
+  return prisma.user.findMany({
+    where: {
+      restaurantId,
+      status: "approved",  // Only fetch approved users
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      phoneNumber: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+}
+
 // Update user by ID
 export async function updateUser(
   id: number,
