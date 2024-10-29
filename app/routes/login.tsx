@@ -23,7 +23,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const email = formData.get("email");
   const password = formData.get("password");
-  const redirectTo = safeRedirect(formData.get("redirectTo"), "/");
+  // const redirectTo = safeRedirect(formData.get("redirectTo"), "/");
   const remember = formData.get("remember");
 
   // Validate email format

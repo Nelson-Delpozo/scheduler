@@ -1,5 +1,5 @@
+import { User } from "@prisma/client";
 import { createCookieSessionStorage, redirect } from "@remix-run/node";
-import type { Request } from "@remix-run/node";
 import invariant from "tiny-invariant";
 
 // import type { User } from "~/models/user.server";
@@ -16,6 +16,7 @@ export const sessionStorage = createCookieSessionStorage({
     sameSite: "lax",
     secrets: [process.env.SESSION_SECRET],
     secure: process.env.NODE_ENV === "production",
+    expires: null
   },
 });
 
