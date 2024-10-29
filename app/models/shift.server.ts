@@ -117,16 +117,14 @@ export async function getShiftById(id: number) {
 
 // Update a shift by ID with edge case handling
 export async function updateShift(
-  shiftId: number,
-  updateData: {
-    name?: string;
-    date?: Date;
-    startTime?: Date;
-    endTime?: Date;
-    role?: string;
-    assignedToId?: number | null;
-  }
-) {
+shiftId: number, p0: Date, p1: Date, p2: Date, role: string, assignedToId: number | undefined, updateData: { date: string; startTime: string; endTime: string; role: string; assignedToId: number | undefined; }, updateData: {
+  name?: string;
+  date?: Date;
+  startTime?: Date;
+  endTime?: Date;
+  role?: string;
+  assignedToId?: number | null;
+}) {
   if (!shiftId) throw new Error("Shift ID is required.");
 
   // Validate times if provided
