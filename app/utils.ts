@@ -1,7 +1,7 @@
+import { User } from "@prisma/client";
 import { useMatches } from "@remix-run/react";
 import { useMemo } from "react";
 
-import type { User } from "~/models/user.server";
 
 const DEFAULT_REDIRECT = "/";
 
@@ -76,7 +76,9 @@ export function validateEmail(email: unknown): email is string {
 }
 
 export function validatePhoneNumber(phoneNumber: string): boolean {
-  // A basic phone number validation (supports only digits and some common phone number formats)
-  const phoneNumberRegex = /^(\+?\d{1,2}\s?)?(\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}$/;
+  // Improved phone number validation supporting formats like:
+  // (123) 456-7890, 123-456-7890, 123.456.7890, 1234567890, +1 (123) 456-7890
+  const phoneNumberRegex = /^(?:\+1\s?)?(\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}$/;
   return phoneNumberRegex.test(phoneNumber);
 }
+

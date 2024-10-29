@@ -52,6 +52,16 @@ export async function createAdminUser(
   });
 }
 
+// Approve a user by ID
+export async function approveUser(id: number) {
+  return prisma.user.update({
+    where: { id },
+    data: {
+      status: "approved",
+    },
+  });
+}
+
 // Get a user by ID
 export async function getUserById(id: number) {
   return prisma.user.findUnique({
@@ -77,13 +87,15 @@ export async function getUsersByRestaurant(restaurantId: number) {
   });
 }
 
-export async function getUsersPendingApprovalByRestaurantId(restaurantId: number) {
+export async function getUsersPendingApprovalByRestaurantId(
+  restaurantId: number,
+) {
   if (!restaurantId) throw new Error("Restaurant ID is required.");
 
   return prisma.user.findMany({
     where: {
       restaurantId,
-      status: "pending",  // Fetch users with 'pending' status
+      status: "pending", // Fetch users with 'pending' status
     },
     select: {
       id: true,
@@ -97,14 +109,13 @@ export async function getUsersPendingApprovalByRestaurantId(restaurantId: number
   });
 }
 
-
 export async function getUsersByRestaurantId(restaurantId: number) {
   if (!restaurantId) throw new Error("Restaurant ID is required.");
 
   return prisma.user.findMany({
     where: {
       restaurantId,
-      status: "approved",  // Only fetch approved users
+      status: "approved", // Only fetch approved users
     },
     select: {
       id: true,

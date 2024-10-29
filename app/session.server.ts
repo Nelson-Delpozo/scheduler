@@ -78,7 +78,9 @@ export async function requireSuperAdmin(request: Request) {
   return requireRole(request, ROLES.SUPER_ADMIN);
 }
 
-export async function getUserId(request: Request): Promise<User["id"] | undefined> {
+export async function getUserId(
+  request: Request,
+): Promise<User["id"] | undefined> {
   const session = await getSession(request);
   return session.get(USER_SESSION_KEY);
 }
@@ -129,7 +131,7 @@ export async function createUserSession({
 
   const maxAge = remember ? 60 * 60 * 24 * 7 : undefined; // 7 days if remembered
   const isSafeRedirect = safeRedirect(redirectTo);
-  
+
   return redirect(isSafeRedirect, {
     headers: {
       "Set-Cookie": await sessionStorage.commitSession(session, { maxAge }),

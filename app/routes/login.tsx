@@ -78,7 +78,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     redirectTo: redirectPath,
     remember: remember === "on" ? true : false,
     request,
-    userId: user.id.toString(), // Convert user.id to string
+    userId: String(user.id), // Ensure user.id is a string
   });
 };
 

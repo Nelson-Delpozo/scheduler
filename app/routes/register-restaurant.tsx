@@ -81,7 +81,7 @@ export const action: ActionFunction = async ({ request }) => {
     return json(
       {
         errors: {
-          phoneNumber: "Phone number must be a valid 10-digit US number",
+          phoneNumber: "Phone number must be a valid format",
         },
       },
       { status: 400 },
